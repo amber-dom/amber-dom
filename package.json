@@ -1,0 +1,32 @@
+{
+  "name": "amber-dom",
+  "version": "0.0.0",
+  "description": "A lightweight virtual dom with diffing & patching algorithm.",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup --config rollup.config.js --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alieeeeen/amber-dom.git"
+  },
+  "keywords": [
+    "virtual-dom",
+    "jsx",
+    "virtual-hyperscript"
+  ],
+  "author": "Alien",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Alieeeeen/amber-dom/issues"
+  },
+  "homepage": "https://github.com/Alieeeeen/amber-dom#readme",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "mocha": "^5.0.5",
+    "rollup": "^0.57.1",
+    "rollup-plugin-babel": "^3.0.3"
+  }
+}

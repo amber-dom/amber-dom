@@ -14,7 +14,7 @@ export function diff (oldTree, newTree) {
 
 function walk(oldNode, newNode, patches, index) {
   var currPatches = [];
-  var propPatches;
+  var propPatches, childrenPatches;
 
   // both Text node.
   if (typeof oldNode === 'string' && typeof newNode === 'string') {
@@ -30,8 +30,10 @@ function walk(oldNode, newNode, patches, index) {
 
   propPatches = diffProps(oldNode, newNode);
   // the whole node should be replaced.
-  if (oldNode.tagName !== newNode.tagName) {
-    currPatches.push({
+  if (oldNode.tagName !== newNode.tagName ||
+      oldNode.key !== newNode.key) {  // actually, their keys must be equal.
+    
+      currPatches.push({
       type: REPLACE,
       node: newNode
     });
@@ -40,17 +42,27 @@ function walk(oldNode, newNode, patches, index) {
   else if (!isEmpty(propPatches)) {
     currPatches.push({
       type: PROPS,
-      item: propPatches
+      content: propPatches
     });
   }
 
-  // #TODO diff children.
+  diffChildren(
+    oldNode,
+    newNode,
+    patches,
+    currPatches,
+    index
+  );
+  if (currPatches.length) {
+    patches[index] = currPatches;
+  }
+  return patches;
 }
 
 function diffProps(oldProps, newProps) {
   var propPatches = {}, value;
 
-  // className might be changed frequently.
+  // className might be changed partially.
   propPatches.classPatches = 
     diffClassNames(oldProps.className, newProps.className);
 
@@ -62,6 +74,11 @@ function diffProps(oldProps, newProps) {
         propPatches[propName] = value;
       }
     }
+  }
+  // remove old props.
+  for (const propName in oldProps) {
+    if (!(propName in newProps))
+      propPatches[propName] = void 0;
   }
 }
 
@@ -90,7 +107,25 @@ function diffClassNames(oldClass, newClass) {
     : void 0;   // this is important.
 }
 
-// # TODO implement it.
-function diffChildren(oldChildren, newChildren) {
+function diffChildren(oldChildren, 
+  newChildren, patches, currPatches, index) {
+  const moves = listDiff(oldChildren, newChildren, 'key');
 
+  if (moves.length) {
+    currPatches.push({
+      type: REORDER,
+      moves: moves
+    });
+  }
+
+  var prevSibling = null;
+  var currIndex = index;
+  oldChildren.forEach((child, i) => {
+    const newChild = newChildren[i];
+    currIndex = (prevSibling && prevSibling.count)
+      ? prevSibling.count + currIndex + 1
+      : currIndex + 1;  // the first child.
+    walk(child, newChildren[i], patches, currIndex);
+    prevSibling = child;
+  });
 }

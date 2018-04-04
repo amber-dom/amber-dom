@@ -1,45 +1,45 @@
 export default listDiff;
 
-function listDiff (oldList, newList, key) {
+function listDiff(oldList, newList, key) {
   const oldListKeys = getKeys(oldList, key);
   const newListKeys = getKeys(newList, key);
   const oldListLength = oldList.length;
   const newListLength = newList.length;
   const moves = [];
 
+  // Not a key was provied, don't diff.
+  if (noKeys(oldListKeys) && noKeys(newListKeys))
+    return moves;
   // record the move of the last element.
   let indexDeltas = new Array(oldListLength).fill(0);
   let _physicalIndex;
 
   newListKeys.forEach((key, newIndex) => {
-    let oldIndex = oldListKeys.indexOf(key);
+    let _physicalIndex = oldListKeys.indexOf(key);
 
-    if (oldIndex === -1) {
+    if (_physicalIndex === -1) {
       // Element doesn't exist in `newList` yet. Tell it to
       // insert it.
       moves.push({
-        type: 'insert',
+        type: 'INSERT',
         index: newIndex,
         item: newList[newIndex]
       });
 
-      // the last element got affected.
+      // positions of all unprocessed elements should take this delta.
       indexDeltas[oldListLength - 1]++;
     } else {
-      _physicalIndex = oldIndex;
-      oldIndex += indexDeltas.reduce((prev, delta, i) => {
-        if (i >= oldIndex) {
-          return prev + delta;
-        } else {
-          return prev;
-        }
-      });
+      let oldIndex = _physicalIndex;
+
+      for (let i = oldListLength - 1; i >= _physicalIndex; i--) {
+        oldIndex += indexDeltas[i];
+      }
 
       // If it is already in place, don't do anything.
       if (newIndex === oldIndex)  return;
 
       moves.push({
-        type: 'move',
+        type: 'MOVE',
         from: oldIndex, 
         to: newIndex
       });
@@ -49,20 +49,20 @@ function listDiff (oldList, newList, key) {
     }
   });
 
-  // Items to be removed is affected by every delta.
-  let indexDelta = indexDeltas.reduce((prev, delta) => prev + delta);
+  // remove extra.
   oldListKeys.forEach((key, i) => {
     
     if (newListKeys.indexOf(key) === -1)
       moves.push({
-        type: 'remove',
-        index: i + indexDelta
+        type: 'REMOVE',
+        index: newListLength  // all extra items must've been moved to end.
       });
   });
 
   return moves;
 }
 
+// Elements with no `key` field is to be removed.
 function getKeys(list, key) {
   return list.map((item, i) => {
     if (key && item) {
@@ -71,4 +71,13 @@ function getKeys(list, key) {
         : item[key];
     } else  return void 0;
   });
+}
+
+
+function noKeys(list) {
+  for (const item of list)
+    if (item !== void 0)
+      return false;
+
+  return true;
 }

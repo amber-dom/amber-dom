@@ -1,10 +1,9 @@
-import listDiff from './listDiff';
-import { isEmpty } from './util';
+import listDiff from './list-diff';
+import { isEmpty } from '../util';
+import patchType from './patch-type';
 
-const REPLACE = 'REPLACE';
-const REORDER = 'REORDER';
-const PROPS = 'FIXPROPS';
-const TEXT = 'TEXT';
+
+const { REPLACE, REORDER, TEXT, PROPS } = patchType;
 
 export function diff (oldTree, newTree) {
   const patches = {};
@@ -109,9 +108,10 @@ function diffClassNames(oldClass, newClass) {
 
 function diffChildren(oldChildren, 
   newChildren, patches, currPatches, index) {
-  const moves = listDiff(oldChildren, newChildren, 'key');
+  const diffs = listDiff(oldChildren, newChildren, 'key');
 
-  if (moves.length) {
+  oldChildren = diffs.diffed; // Must reorder them first before steppin deeper.
+  if (diffs.moves.length) {
     currPatches.push({
       type: REORDER,
       moves: moves

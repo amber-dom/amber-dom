@@ -1,5 +1,5 @@
-import VNode from './vnode';
-import isArray from './isArray';
+import VNode from '../vnode/index';
+import { isArray } from '../util';
 export default h;
 
 
@@ -22,24 +22,36 @@ function parseTagName(tagName) {
       result.id = part.substr(1);
     }
   });
+
+  result.className && result.className.join(' ');
   return result;
 }
 
+/**
+ * 
+ * @param {String|Function} tagName a built-in tag name or custom function that returns an object created by h.
+ * @param {Object} props optional. any style, event listeners, and className should be put here.
+ * @param {*} children optional children. Any string, instance of VNode will be children.
+ */
 function h(tagName, props, ...children) {
   var tagInfo, vnode;
 
-  // handle no-props.
-  if (
-      (props && isArray(props)) ||
-      (props && typeof props === 'string')
-    ) {
-    children = props;
-    props = {};
-  }
-
   (props || (props = {}));
   (children || (children = []));
-  (props.className || (props.className = []));
+
+  // handle children re-maps.
+  if ((props instanceof VNode) ||
+      (typeof props === 'string')
+    ) {
+    children.unshift(props);
+    props = {};
+  }
+  
+  // handle children re-maps.
+  if (isArray(props)) {
+    children = [...props, children];
+    props = {};
+  }
 
   // handle object-literal `style`.
   if (props.style && typeof props.style === 'object') {
@@ -51,16 +63,17 @@ function h(tagName, props, ...children) {
     props.style = style;
   }
 
-  // handle string type className.
-  if (props.className && typeof props.className === 'string') {
-    props.className = props.className.split(/\s+/);
+  // handle array-literal `className`.
+  if (props.className && isArray(props.className)) {
+    props.className = props.className.join(' ');
   }
 
   if (typeof tagName === 'string') {
     tagInfo = parseTagName(tagName);
-    (tagInfo.className || (tagInfo.className = [])).forEach((name) => {
-      (props.className || (props.className = [])).push(name);
-    });
+    if (tagInfo.className) {
+      (props.className || (props.className = ''));
+      props.className += ' ' + tagInfo.className;
+    }
     // any children will be handled by VNode, remember there's no
     // VText.
     return new VNode(tagInfo.tagName, props, children);

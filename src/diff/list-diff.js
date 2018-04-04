@@ -1,15 +1,22 @@
-export default listDiff;
+import patchType from './patch-type';
+export default diff;
 
-function listDiff(oldList, newList, key) {
+
+const { REPLACE, REORDER, TEXT, PROPS } = patchType;
+function diff(oldList, newList, key) {
   const oldListKeys = getKeys(oldList, key);
   const newListKeys = getKeys(newList, key);
   const oldListLength = oldList.length;
   const newListLength = newList.length;
+  const diffed = oldList.slice();
   const moves = [];
 
   // Not a key was provied, don't diff.
   if (noKeys(oldListKeys) && noKeys(newListKeys))
-    return moves;
+    return {
+      diffed,
+      moves
+    };
   // record the move of the last element.
   let indexDeltas = new Array(oldListLength).fill(0);
   let _physicalIndex;
@@ -25,6 +32,7 @@ function listDiff(oldList, newList, key) {
         index: newIndex,
         item: newList[newIndex]
       });
+      diffed.splice(newIndex, 0, newList[newIndex]);
 
       // positions of all unprocessed elements should take this delta.
       indexDeltas[oldListLength - 1]++;
@@ -43,6 +51,8 @@ function listDiff(oldList, newList, key) {
         from: oldIndex, 
         to: newIndex
       });
+      let _elem = diffed.splice(oldIndex, 1)[0];
+      diffed.splice(newIndex, 0, _elem)
 
       // It is impossible to move element from front to back.
       indexDeltas[_physicalIndex]++;
@@ -52,14 +62,19 @@ function listDiff(oldList, newList, key) {
   // remove extra.
   oldListKeys.forEach((key, i) => {
     
-    if (newListKeys.indexOf(key) === -1)
+    if (newListKeys.indexOf(key) === -1) {
       moves.push({
         type: 'REMOVE',
         index: newListLength  // all extra items must've been moved to end.
       });
+      diffed.splice(newListLength, 1);
+    }
   });
 
-  return moves;
+  return {
+    diffed,
+    moves
+  };
 }
 
 // Elements with no `key` field is to be removed.

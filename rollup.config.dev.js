@@ -1,52 +1,36 @@
 import babel from 'rollup-plugin-babel';
+import serve from 'rollup-plugin-serve';
+import livereload from 'rollup-plugin-livereload';
 
 // Convert them to umd for easy testing.
 export default [{
-  input: 'src/diff/index.js',
+  input: 'src/index.js',
   output: {
-      file: 'test/diff/index.js',
-      format: 'umd',
-      name: 'diffModule'
-  },
-  plugins: [
-    babel({
-      exclude: 'node_modules/**'
-    })
-  ]
-}, {
-  input: 'src/h/index.js',
-  output: {
-    file: 'test/h/index.js',
+    file: 'test/amberdom.js',
     format: 'umd',
-    name: 'h'
+    name: 'amberdom',
+    sourcemap: true
   },
+  watch: {
+    include: 'src/**/*.js'
+  }
+  ,
   plugins: [
     babel({
       exclude: 'node_modules/**'
-    })
-  ]
-}, {
-  input: 'src/patch/index.js',
-  output: {
-    file: 'test/patch/index.js',
-    format: 'umd',
-    name: 'patch'
-  },
-  plugins: [
-    babel({
-      exclude: 'node_modules/**'
-    })
-  ]
-}, {
-  input: 'src/vnode/index.js',
-  output: {
-    file: 'test/vnode/index.js',
-    format: 'umd',
-    name: 'VNode'
-  },
-  plugins: [
-    babel({
-      exclude: 'node_modules/**'
-    })
-  ]
-}]
+    }),
+
+    serve({
+      open: true,
+      verbose: true,
+      contentBase: 'test',
+      host: 'localhost',
+      port: 8080,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      }
+    }),
+
+    livereload()
+  ],
+}];

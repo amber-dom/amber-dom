@@ -1,3 +1,5 @@
+const { h } = amberdom;
+
 describe('h-module', () => {
   describe('#h', () => {
     it('`className` as an array', () => {
@@ -53,8 +55,7 @@ describe('h-module', () => {
 
     it('Multiple children', () => {
       const div = h("div", { style: { color: 'red' } }, h(
-        "span", {}, "Hello"
-      ), "world");
+        "span", {}, "Hello"), "world");
 
       const divElem = div.render();
       expect(divElem.style.color).to.be('red');
@@ -62,11 +63,55 @@ describe('h-module', () => {
       expect(divElem.children[0].textContent).to.be('Hello');
     });
 
-    it('Multiple children case 2', () => {
+    it('Multiple text children', () => {
       const div = h("div", "hello", " world");
       const divElem = div.render();
 
       expect(divElem.textContent).to.be("hello world");
-    })
+    });
+
+    it('Event listeners. Expand this item to see how I\'ve tested it.', () => {
+      let wasClicked = false;
+
+      function handleClick(ev) {
+        wasClicked = true;
+        button.detachEventListeners();
+      }
+      
+      const button = h("button", {
+        'ev-click': handleClick,
+        style: {
+          'background-color': '#fec'
+        }
+      }, "Click Me");
+      const buttonElem = button.render();
+      const event = new Event('click');
+
+      buttonElem.dispatchEvent(event);
+      expect(wasClicked).to.be(true);
+    });
+
+    it('Detaching event listeners. Expand this item to see how I\'ve tested it.', () => {
+      let on = false;
+
+      function onceOnYouCannotToggleItOff() {
+        on = !on;
+        button.detachEventListeners();
+      }
+
+      const button = h("button", {
+        'ev-click': onceOnYouCannotToggleItOff
+      }, "Click Me");
+    
+      const buttonElem = button.render();
+      const event = new Event('click');
+      buttonElem.dispatchEvent(event);
+      expect(on).to.be(true);
+
+      let i = 2;
+      while(i--)
+        buttonElem.dispatchEvent(event);
+        expect(on).to.be(true);
+    });
   })
 });

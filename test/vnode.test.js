@@ -1,3 +1,5 @@
+const { VNode } = amberdom;
+
 describe('VNode', () => {
   describe('#constructor', () => {
 

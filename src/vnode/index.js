@@ -21,12 +21,13 @@ class VNode {
       else
         return acc + 1;
     }, 0);
+    this.cleanups = []; // for cleaning up event listeners.
 
     delete props.key; // no key will be needed anymore.
   }
 
   /**
-   * 
+   * render a real DOM tree for this VTree rooted at this VNode.
    */
   render() {
     const element = !(/(SVG|svg)/.test(this.tagName))
@@ -43,12 +44,20 @@ class VNode {
       if (props.hasOwnProperty(propName)) {
         const _events = propName.match(eventHookRe);
         if (_events) {
+          // FIXME: might be a better way of handling this.
           try {
             const handler = typeof props[propName] === 'function'
               ? props[propName]
               : new Function(`(${props[propName]})(...arguments);`);
-
-            element.addEventListener(_events[1], handler);
+            
+            // store it for later detachment, to avoid memory
+            // leaking.
+            this.cleanups.push({
+              evName: _events[1],
+              handler: handler
+            });
+            // avoid bubbling.
+            element.addEventListener(_events[1], handler, false);
           } catch(e) {
             console.log(
               `Warning: listener for event '${_event[1]}' isn't working.
@@ -77,6 +86,7 @@ class VNode {
       else if (child instanceof VNode) {
         childElement = child.render();
       }
+      // FIXME: might be buggy.
       // It is a custom-defined node.
       else {
         var _render = child.render || void 0;
@@ -94,6 +104,13 @@ class VNode {
       element.appendChild(childElement);
     });
 
+    this.$el = element;
     return element;
+  }
+
+  detachEventListeners() {
+    this.cleanups.forEach(event => {
+      this.$el.removeEventListener(event.evName, event.handler);
+    });
   }
 }

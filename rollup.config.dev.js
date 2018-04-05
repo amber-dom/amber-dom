@@ -12,7 +12,7 @@ export default [{
     sourcemap: true
   },
   watch: {
-    include: 'src/**/*.js'
+    exclude: 'node_modules/**'
   }
   ,
   plugins: [

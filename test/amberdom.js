@@ -41,7 +41,7 @@
     }
 
     /**
-     * 
+     * render a real DOM tree for this VTree rooted at this VNode.
      */
 
 
@@ -56,6 +56,7 @@
           if (props.hasOwnProperty(propName)) {
             var _events = propName.match(eventHookRe);
             if (_events) {
+              // FIXME: might be a better way of handling this.
               try {
                 var handler = typeof props[propName] === 'function' ? props[propName] : new Function('(' + props[propName] + ')(...arguments);');
 
@@ -65,8 +66,8 @@
                   evName: _events[1],
                   handler: handler
                 });
-
-                element.addEventListener(_events[1], handler);
+                // avoid bubbling.
+                element.addEventListener(_events[1], handler, false);
               } catch (e) {
                 console.log('Warning: listener for event \'' + _event[1] + '\' isn\'t working.\n              If you\'re specifying this handler in string, please specify a function.');
               }
@@ -89,6 +90,7 @@
           else if (child instanceof VNode) {
               childElement = child.render();
             }
+            // FIXME: might be buggy.
             // It is a custom-defined node.
             else {
                 var _render = child.render || void 0;

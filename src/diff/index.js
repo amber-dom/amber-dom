@@ -5,7 +5,7 @@ import patchType from './patch-type';
 
 const { REPLACE, REORDER, TEXT, PROPS } = patchType;
 
-export function diff (oldTree, newTree) {
+export default function diff (oldTree, newTree) {
   const patches = {};
   walk(oldTree, newTree, patches, 0);
   return patches;
@@ -14,6 +14,8 @@ export function diff (oldTree, newTree) {
 function walk(oldNode, newNode, patches, index) {
   var currPatches = [];
   var propPatches, childrenPatches;
+
+  // TODO: let custom-defined component take control of diffing.
 
   // both Text node.
   if (typeof oldNode === 'string' && typeof newNode === 'string') {
@@ -28,9 +30,10 @@ function walk(oldNode, newNode, patches, index) {
   }
 
   propPatches = diffProps(oldNode, newNode);
-  // the whole node should be replaced.
+  // the whole node should be replaced, if tag names are not the same
+  // or keys are not the same.
   if (oldNode.tagName !== newNode.tagName ||
-      oldNode.key !== newNode.key) {  // actually, their keys must be equal.
+      oldNode.key !== newNode.key) {
     
       currPatches.push({
       type: REPLACE,
@@ -41,7 +44,7 @@ function walk(oldNode, newNode, patches, index) {
   else if (!isEmpty(propPatches)) {
     currPatches.push({
       type: PROPS,
-      content: propPatches
+      props: propPatches
     });
   }
 
@@ -61,13 +64,8 @@ function walk(oldNode, newNode, patches, index) {
 function diffProps(oldProps, newProps) {
   var propPatches = {}, value;
 
-  // className might be changed partially.
-  propPatches.classPatches = 
-    diffClassNames(oldProps.className, newProps.className);
-
   for (const propName in newProps) {
     if (newProps.hasOwnProperty(propName)) {
-      if (propName === 'className') continue; // already done.
       value = newProps[propName];
       if (oldProps[propName] !== value) {
         propPatches[propName] = value;
@@ -81,30 +79,6 @@ function diffProps(oldProps, newProps) {
   }
 }
 
-function diffClassNames(oldClass, newClass) {
-  var classPatches = [];
-
-  newClass.forEach((name) => {
-    if (oldClass.indexOf(name) === -1) {
-      classPatches.push({
-        type: 'ADD',
-        name: name
-      });
-    }
-  });
-
-  oldClass.forEach((name) => {
-    if (newClass.indexOf(name) === -1) {
-      classPatches.push({
-        type: 'REMOVE',
-        name: name
-      });
-    }
-  });
-  return classPatches.length !== 0
-    ? classPatches
-    : void 0;   // this is important.
-}
 
 function diffChildren(oldChildren, 
   newChildren, patches, currPatches, index) {

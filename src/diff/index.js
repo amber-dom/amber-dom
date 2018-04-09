@@ -19,7 +19,7 @@ function walk(oldNode, newNode, patches, index) {
 
   if (newNode === void 0) {
     // oldNode will be removed.
-    return;
+    return patches;
   }
 
   // both Text node.
@@ -31,13 +31,13 @@ function walk(oldNode, newNode, patches, index) {
       patches[index] = [{ type: TEXT, text: newNode }];
     }
     // there would be no props nor children.
-    return;
+    return patches;
   }
 
   propPatches = diffProps(oldNode.props || {}, newNode.props || {});
 
   // the whole node should be replaced, if tag names are not the same
-  // or keys are not the same.
+  // or keys diffed.splice(oldListLength, 0, ...inserted); are not the same.
   if (oldNode.tagName !== newNode.tagName ||
       oldNode.key !== newNode.key) {
     
@@ -45,6 +45,9 @@ function walk(oldNode, newNode, patches, index) {
         type: REPLACE,
         node: newNode
       });
+      patches[index] = currPatches;
+      // do not diff their children anymore.
+      return patches;
   }
   // only patch some props.
   else if (!isEmpty(propPatches)) {
@@ -70,6 +73,7 @@ function walk(oldNode, newNode, patches, index) {
 function diffProps(oldProps, newProps) {
   var propPatches = {}, value;
 
+  // update props.
   for (const propName in newProps) {
     if (newProps.hasOwnProperty(propName)) {
       value = newProps[propName];
@@ -83,6 +87,7 @@ function diffProps(oldProps, newProps) {
     if (!(propName in newProps))
       propPatches[propName] = void 0;
   }
+  return propPatches;
 }
 
 
@@ -94,7 +99,7 @@ function diffChildren(oldChildren,
   if (diffs.moves.length) {
     currPatches.push({
       type: REORDER,
-      moves: moves
+      moves: diffs.moves
     });
   }
 

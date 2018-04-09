@@ -211,7 +211,7 @@
 
   var REPLACE = 'REPLACE';
   var REORDER = 'REORDER';
-  var PROPS = 'FIXPROPS';
+  var PROPS = 'PROPS';
   var TEXT = 'TEXT';
 
   var patchType = {
@@ -220,6 +220,8 @@
     PROPS: PROPS,
     TEXT: TEXT
   };
+
+  function _toConsumableArray$1(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
   function diff(oldList, newList, key) {
     var oldListKeys = getKeys(oldList, key);
@@ -230,10 +232,49 @@
     var moves = [];
 
     // Not a key was provied, don't diff.
-    if (noKeys(oldListKeys) && noKeys(newListKeys)) return {
-      diffed: diffed,
-      moves: moves
-    };
+    if (noKeys(oldListKeys) && noKeys(newListKeys)) {
+      var op = void 0,
+          start = void 0,
+          end = void 0,
+          inserted = void 0;
+
+      if (oldListLength === newListLength) {
+        return {
+          diffed: diffed,
+          moves: moves
+        };
+      }
+
+      // Remove accessary nodes.
+      if (oldListLength > newListLength) {
+        op = 'REMOVE';
+        start = newListLength;
+        end = oldListLength;
+        diffed.splice(newListLength, oldListLength - newListLength);
+      }
+
+      // Insert neccessary
+      else if (newListLength > oldListLength) {
+          op = 'INSERT';
+          start = oldListLength;
+          end = newListLength;
+          inserted = newList.slice(oldListLength);
+          diffed = [].concat(_toConsumableArray$1(diffed), _toConsumableArray$1(inserted));
+        }
+
+      for (var i = start; i < end; i++) {
+        moves.push({
+          type: op,
+          index: i,
+          item: newList[i] || null // It doesn't matter what.
+        });
+      }
+
+      return {
+        diffed: diffed,
+        moves: moves
+      };
+    }
     // record the move of the last element.
     var indexDeltas = new Array(oldListLength).fill(0);
 
@@ -255,8 +296,8 @@
       } else {
         var oldIndex = _physicalIndex;
 
-        for (var i = oldListLength - 1; i >= _physicalIndex; i--) {
-          oldIndex += indexDeltas[i];
+        for (var _i = oldListLength - 1; _i >= _physicalIndex; _i--) {
+          oldIndex += indexDeltas[_i];
         }
 
         // If it is already in place, don't do anything.
@@ -351,7 +392,7 @@
 
     if (newNode === void 0) {
       // oldNode will be removed.
-      return;
+      return patches;
     }
 
     // both Text node.
@@ -363,19 +404,22 @@
           patches[index] = [{ type: TEXT$2, text: newNode }];
         }
         // there would be no props nor children.
-        return;
+        return patches;
       }
 
     propPatches = diffProps(oldNode.props || {}, newNode.props || {});
 
     // the whole node should be replaced, if tag names are not the same
-    // or keys are not the same.
+    // or keys diffed.splice(oldListLength, 0, ...inserted); are not the same.
     if (oldNode.tagName !== newNode.tagName || oldNode.key !== newNode.key) {
 
       currPatches.push({
         type: REPLACE$2,
         node: newNode
       });
+      patches[index] = currPatches;
+      // do not diff their children anymore.
+      return patches;
     }
     // only patch some props.
     else if (!isEmpty(propPatches)) {
@@ -393,15 +437,23 @@
   }
 
   function diffProps(oldProps, newProps) {
-    var value;
+    var propPatches = {},
+        value;
 
+    // update props.
     for (var propName in newProps) {
       if (newProps.hasOwnProperty(propName)) {
         value = newProps[propName];
         if (oldProps[propName] !== value) {
+          propPatches[propName] = value;
         }
       }
     }
+    // remove old props.
+    for (var _propName in oldProps) {
+      if (!(_propName in newProps)) propPatches[_propName] = void 0;
+    }
+    return propPatches;
   }
 
   function diffChildren(oldChildren, newChildren, patches, currPatches, index) {
@@ -411,7 +463,7 @@
     if (diffs.moves.length) {
       currPatches.push({
         type: REORDER$2,
-        moves: moves
+        moves: diffs.moves
       });
     }
 

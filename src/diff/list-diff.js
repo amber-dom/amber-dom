@@ -8,15 +8,51 @@ function diff(oldList, newList, key) {
   const newListKeys = getKeys(newList, key);
   const oldListLength = oldList.length;
   const newListLength = newList.length;
-  const diffed = oldList.slice();
-  const moves = [];
+  let diffed = oldList.slice();
+  let moves = [];
 
   // Not a key was provied, don't diff.
-  if (noKeys(oldListKeys) && noKeys(newListKeys))
+  if (noKeys(oldListKeys) && noKeys(newListKeys)) {
+    let op, start, end, index, inserted;
+
+    if (oldListLength === newListLength) {
+      return {
+        diffed,
+        moves
+      };
+    }
+
+    // Remove accessary nodes.
+    if (oldListLength > newListLength) {
+      op = 'REMOVE';
+      start = newListLength;
+      end = oldListLength;
+      diffed.splice(newListLength, oldListLength - newListLength);
+    }
+    
+    // Insert neccessary
+    else if (newListLength > oldListLength) {
+      op = 'INSERT';
+      start = oldListLength;
+      end = newListLength;
+      inserted = newList.slice(oldListLength);
+      diffed = [...diffed, ...inserted];
+    }
+
+    for (let i = start; i < end; i++) {
+      moves.push({
+        type: op,
+        index: i,
+        item: newList[i] || null  // It doesn't matter what.
+      });
+    }
+
     return {
       diffed,
       moves
     };
+
+  }
   // record the move of the last element.
   let indexDeltas = new Array(oldListLength).fill(0);
   let _physicalIndex;

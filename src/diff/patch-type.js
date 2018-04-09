@@ -1,6 +1,6 @@
 const REPLACE = 'REPLACE';
 const REORDER = 'REORDER';
-const PROPS = 'FIXPROPS';
+const PROPS = 'PROPS';
 const TEXT = 'TEXT';
 
 const patchType = {

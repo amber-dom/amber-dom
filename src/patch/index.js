@@ -6,19 +6,22 @@ export default patch;
 const { REPLACE, REORDER, PROPS, TEXT } = patchType;
 
 function patch(domRoot, patches) {
-  walk(domRoot, patches, 0);
+  walk(domRoot, patches, { index: 0 });
 }
 
-function walk(domNode, patches, index) {
-  const currPatches = patches[index];
+function walk(domNode, patches, walker) {
+  const currPatches = patches[walker.index];
 
-  // nothing to patch.
-  if (!currPatches) {
-    return;
+  if (domNode.childNodes) {
+    childNodes.forEach((child, i) => {
+      walker.index++;
+      walk(child, patches, walker);
+    });
   }
 
-  applyPatch(domNode, currPatches);
-
+  if(currPatches) {
+    applyPatches(domNode, currPatches);
+  }
 }
 
 /**
@@ -61,7 +64,7 @@ function applyPatches(domNode, patches) {
       break;
     
     case REORDER:
-      reorderChildren(domNode.childNodes, patch.moves);
+      reorderChildren(domNode, patch.moves);
       break;
 
     default:
@@ -71,6 +74,29 @@ function applyPatches(domNode, patches) {
 }
 
 // TODO: 
-function reorderChildren(childNodes, moves) {
+function reorderChildren(node, moves) {
+  const childNodes = Array.prototype.slice.call(node.childNodes);
+  let node;
 
+  moves.forEach(move => {
+  switch(move.type) {
+  case 'INSERT':
+    try {
+      node = move.item.render();
+      childNodes.splice(move.index, 0, node);
+    } catch (e) {
+      console.log('A custom-defined node should have a render method, otherwise it must be stateless.');
+    }
+    break;
+
+  case 'REMOVE':
+    childNodes.splice(move.index, 1);
+    break;
+
+  case 'MOVE':
+    node = childNodes.splice(move.from, 1)[0];
+    childNodes.splice(move.to, 0, node);
+    break;
+  }
+  })
 }

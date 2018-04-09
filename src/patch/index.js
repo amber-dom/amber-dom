@@ -73,9 +73,9 @@ function applyPatches(domNode, patches) {
   });
 }
 
-// TODO: 
-function reorderChildren(node, moves) {
-  const childNodes = Array.prototype.slice.call(node.childNodes);
+// TODO: Add batch.
+function reorderChildren(domNode, moves) {
+  const childNodes = Array.prototype.slice.call(domNode.childNodes);
   let node;
 
   moves.forEach(move => {

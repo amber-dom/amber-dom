@@ -347,6 +347,8 @@
     var currPatches = [];
     var propPatches;
 
+    // TODO: let custom-defined component take control of diffing.
+
     // both Text node.
     if (typeof oldNode === 'string' && typeof newNode === 'string') {
 
@@ -360,9 +362,9 @@
     }
 
     propPatches = diffProps(oldNode, newNode);
-    // the whole node should be replaced.
+    // the whole node should be replaced, if tag names are not the same
+    // or keys are not the same.
     if (oldNode.tagName !== newNode.tagName || oldNode.key !== newNode.key) {
-      // actually, their keys must be equal.
 
       currPatches.push({
         type: REPLACE$2,
@@ -373,7 +375,7 @@
     else if (!isEmpty(propPatches)) {
         currPatches.push({
           type: PROPS$2,
-          content: propPatches
+          props: propPatches
         });
       }
 
@@ -385,48 +387,15 @@
   }
 
   function diffProps(oldProps, newProps) {
-    var propPatches = {},
-        value;
-
-    // className might be changed partially.
-    propPatches.classPatches = diffClassNames(oldProps.className, newProps.className);
+    var value;
 
     for (var propName in newProps) {
       if (newProps.hasOwnProperty(propName)) {
-        if (propName === 'className') continue; // already done.
         value = newProps[propName];
         if (oldProps[propName] !== value) {
-          propPatches[propName] = value;
         }
       }
     }
-    // remove old props.
-    for (var _propName in oldProps) {
-      if (!(_propName in newProps)) propPatches[_propName] = void 0;
-    }
-  }
-
-  function diffClassNames(oldClass, newClass) {
-    var classPatches = [];
-
-    newClass.forEach(function (name) {
-      if (oldClass.indexOf(name) === -1) {
-        classPatches.push({
-          type: 'ADD',
-          name: name
-        });
-      }
-    });
-
-    oldClass.forEach(function (name) {
-      if (newClass.indexOf(name) === -1) {
-        classPatches.push({
-          type: 'REMOVE',
-          name: name
-        });
-      }
-    });
-    return classPatches.length !== 0 ? classPatches : void 0; // this is important.
   }
 
   function diffChildren(oldChildren, newChildren, patches, currPatches, index) {
@@ -450,7 +419,101 @@
     });
   }
 
-  var patch = {};
+  var REPLACE$3 = patchType.REPLACE,
+      REORDER$3 = patchType.REORDER,
+      PROPS$3 = patchType.PROPS,
+      TEXT$3 = patchType.TEXT;
+
+
+  function patch(domRoot, patches) {
+    walk$1(domRoot, patches, { index: 0 });
+  }
+
+  function walk$1(domNode, patches, walker) {
+    var currPatches = patches[walker.index];
+
+    if (domNode.childNodes) {
+      childNodes.forEach(function (child, i) {
+        walker.index++;
+        walk$1(child, patches, walker);
+      });
+    }
+
+    if (currPatches) {
+      applyPatches(domNode, currPatches);
+    }
+  }
+
+  /**
+   * patch a single dom node.
+   * @param {NodeList} domNode 
+   * @param {Array} patch 
+   */
+  function applyPatches(domNode, patches) {
+    var props = void 0;
+
+    patches.forEach(function (patch) {
+      switch (patch.type) {
+        case REPLACE$3:
+          newNode = patch.node instanceof VNode || patch.node.render ? patch.node.render() // an instance of VNode or a custom node.
+          : typeof patch.node === 'string' ? document.createTextNode(patch.node) : new Error('You might be using a custom node, if so, you need to provide a render function.');
+          if (newNode instanceof Error) {
+            throw newNode;
+          }
+          break;
+
+        case PROPS$3:
+          props = patch.props;
+          for (var propName in props) {
+            if (props[propName] === void 0) domNode.removeAttribute(propName);else domNode.setAttribute(propName, props[propName]);
+          }
+          break;
+
+        case TEXT$3:
+          if (domNode.textContent) {
+            domNode.textContent = patch.text;
+          } else {
+            domNode.nodeValue = patch.text;
+          }
+          break;
+
+        case REORDER$3:
+          reorderChildren(domNode, patch.moves);
+          break;
+
+        default:
+          throw new Error('Some internal error.');
+      }
+    });
+  }
+
+  // TODO: Add batch.
+  function reorderChildren(domNode, moves) {
+    var childNodes = Array.prototype.slice.call(domNode.childNodes);
+    var node = void 0;
+
+    moves.forEach(function (move) {
+      switch (move.type) {
+        case 'INSERT':
+          try {
+            node = move.item.render();
+            childNodes.splice(move.index, 0, node);
+          } catch (e) {
+            console.log('A custom-defined node should have a render method, otherwise it must be stateless.');
+          }
+          break;
+
+        case 'REMOVE':
+          childNodes.splice(move.index, 1);
+          break;
+
+        case 'MOVE':
+          node = childNodes.splice(move.from, 1)[0];
+          childNodes.splice(move.to, 0, node);
+          break;
+      }
+    });
+  }
 
   var index = {
     h: h,

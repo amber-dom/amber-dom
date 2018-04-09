@@ -9,6 +9,8 @@ function patch(domRoot, patches) {
   walk(domRoot, patches, { index: 0 });
 }
 
+// walker keeps the complexity away.
+// `walk` updates the domTree buttom-up.
 function walk(domNode, patches, walker) {
   const currPatches = patches[walker.index];
 
@@ -31,7 +33,7 @@ function walk(domNode, patches, walker) {
  * @param {Array} patch 
  */
 function applyPatches(domNode, patches) {
-  let props;
+  let props, newNode;
 
   patches.forEach(patch => {
     switch(patch.type) {
@@ -44,15 +46,16 @@ function applyPatches(domNode, patches) {
       if (newNode instanceof Error) {
         throw newNode;
       }
+      domNode.parentNode.replaceChild(domNode, newNode);
       break;
 
     case PROPS:
       props = patch.props;
-      for (const propName in props) {
+      for (let propName in props) {
         if (props[propName] === void 0)
-          domNode.removeAttribute(propName);
+          domNode.removeAttribute(propName !== 'className' ? propName : 'class');
         else
-          domNode.setAttribute(propName, props[propName]);
+          domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
       }
       break;
 
@@ -81,23 +84,23 @@ function reorderChildren(domNode, moves) {
 
   moves.forEach(move => {
   switch(move.type) {
-  case 'INSERT':
-    try {
-      node = move.item.render();
-      childNodes.splice(move.index, 0, node);
-    } catch (e) {
-      console.log('A custom-defined node should have a render method, otherwise it must be stateless.');
+    case 'INSERT':
+      try {
+        node = move.item.render();
+        childNodes.splice(move.index, 0, node);
+      } catch (e) {
+        console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
+      }
+      break;
+
+    case 'REMOVE':
+      childNodes.splice(move.index, 1);
+      break;
+
+    case 'MOVE':
+      node = childNodes.splice(move.from, 1)[0];
+      childNodes.splice(move.to, 0, node);
+      break;
     }
-    break;
-
-  case 'REMOVE':
-    childNodes.splice(move.index, 1);
-    break;
-
-  case 'MOVE':
-    node = childNodes.splice(move.from, 1)[0];
-    childNodes.splice(move.to, 0, node);
-    break;
-  }
-  })
+  });
 }

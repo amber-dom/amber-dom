@@ -30,7 +30,7 @@ function diff(oldList, newList, key) {
       diffed.splice(newListLength, oldListLength - newListLength);
     }
     
-    // Insert neccessary
+    // Insert neccessary nodes.
     else if (newListLength > oldListLength) {
       op = 'INSERT';
       start = oldListLength;

@@ -113,8 +113,6 @@ describe('diff', () => {
       const v1 = h('div', { 'data-main': 'something' });
       const v2 = h('div', { 'data-main': 'else' });
 
-      console.log(v1);
-      console.log(v2);
       let patches = diff(v1, v2);
       expect(patches).to.eql({
         0: [{ type: 'PROPS', props: { 'data-main': 'else' } }]

@@ -253,7 +253,7 @@
         diffed.splice(newListLength, oldListLength - newListLength);
       }
 
-      // Insert neccessary
+      // Insert neccessary nodes.
       else if (newListLength > oldListLength) {
           op = 'INSERT';
           start = oldListLength;
@@ -487,6 +487,8 @@
     walk$1(domRoot, patches, { index: 0 });
   }
 
+  // walker keeps the complexity away.
+  // `walk` updates the domTree buttom-up.
   function walk$1(domNode, patches, walker) {
     var currPatches = patches[walker.index];
 
@@ -509,7 +511,8 @@
    * @param {Array} patch 
    */
   function applyPatches(domNode, patches) {
-    var props = void 0;
+    var props = void 0,
+        newNode = void 0;
 
     patches.forEach(function (patch) {
       switch (patch.type) {
@@ -519,12 +522,13 @@
           if (newNode instanceof Error) {
             throw newNode;
           }
+          domNode.parentNode.replaceChild(domNode, newNode);
           break;
 
         case PROPS$3:
           props = patch.props;
           for (var propName in props) {
-            if (props[propName] === void 0) domNode.removeAttribute(propName);else domNode.setAttribute(propName, props[propName]);
+            if (props[propName] === void 0) domNode.removeAttribute(propName !== 'className' ? propName : 'class');else domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
           }
           break;
 
@@ -558,7 +562,7 @@
             node = move.item.render();
             childNodes.splice(move.index, 0, node);
           } catch (e) {
-            console.log('A custom-defined node should have a render method, otherwise it must be stateless.');
+            console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
           }
           break;
 

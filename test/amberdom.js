@@ -349,19 +349,25 @@
 
     // TODO: let custom-defined component take control of diffing.
 
-    // both Text node.
-    if (typeof oldNode === 'string' && typeof newNode === 'string') {
-
-      if (oldNode === newNode) {
-        // nothing to patch.
-      } else {
-        patches[index] = { type: TEXT$2, text: newNode };
-      }
-      // there would be no props nor children.
+    if (newNode === void 0) {
+      // oldNode will be removed.
       return;
     }
 
-    propPatches = diffProps(oldNode, newNode);
+    // both Text node.
+    else if (typeof oldNode === 'string' && typeof newNode === 'string') {
+
+        if (oldNode === newNode) {
+          // nothing to patch.
+        } else {
+          patches[index] = [{ type: TEXT$2, text: newNode }];
+        }
+        // there would be no props nor children.
+        return;
+      }
+
+    propPatches = diffProps(oldNode.props || {}, newNode.props || {});
+
     // the whole node should be replaced, if tag names are not the same
     // or keys are not the same.
     if (oldNode.tagName !== newNode.tagName || oldNode.key !== newNode.key) {
@@ -379,7 +385,7 @@
         });
       }
 
-    diffChildren(oldNode, newNode, patches, currPatches, index);
+    diffChildren(oldNode.children || [], newNode.children || [], patches, currPatches, index);
     if (currPatches.length) {
       patches[index] = currPatches;
     }
@@ -433,7 +439,8 @@
     var currPatches = patches[walker.index];
 
     if (domNode.childNodes) {
-      childNodes.forEach(function (child, i) {
+      var childArr = [].slice.call(domNode.childNodes);
+      childArr.forEach(function (child, i) {
         walker.index++;
         walk$1(child, patches, walker);
       });

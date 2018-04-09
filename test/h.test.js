@@ -1,6 +1,6 @@
 const { h } = amberdom;
 
-describe('h-module', () => {
+describe('h', () => {
   describe('#h', () => {
     it('`className` as an array', () => {
       const div = h('div', {

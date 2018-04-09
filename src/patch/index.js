@@ -13,7 +13,8 @@ function walk(domNode, patches, walker) {
   const currPatches = patches[walker.index];
 
   if (domNode.childNodes) {
-    childNodes.forEach((child, i) => {
+    const childArr = [].slice.call(domNode.childNodes);
+    childArr.forEach((child, i) => {
       walker.index++;
       walk(child, patches, walker);
     });

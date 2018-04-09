@@ -17,28 +17,34 @@ function walk(oldNode, newNode, patches, index) {
 
   // TODO: let custom-defined component take control of diffing.
 
+  if (newNode === void 0) {
+    // oldNode will be removed.
+    return;
+  }
+
   // both Text node.
-  if (typeof oldNode === 'string' && typeof newNode === 'string') {
+  else if (typeof oldNode === 'string' && typeof newNode === 'string') {
 
     if (oldNode === newNode) {
       // nothing to patch.
     } else {
-      patches[index] = { type: TEXT, text: newNode };
+      patches[index] = [{ type: TEXT, text: newNode }];
     }
     // there would be no props nor children.
     return;
   }
 
-  propPatches = diffProps(oldNode, newNode);
+  propPatches = diffProps(oldNode.props || {}, newNode.props || {});
+
   // the whole node should be replaced, if tag names are not the same
   // or keys are not the same.
   if (oldNode.tagName !== newNode.tagName ||
       oldNode.key !== newNode.key) {
     
       currPatches.push({
-      type: REPLACE,
-      node: newNode
-    });
+        type: REPLACE,
+        node: newNode
+      });
   }
   // only patch some props.
   else if (!isEmpty(propPatches)) {
@@ -49,8 +55,8 @@ function walk(oldNode, newNode, patches, index) {
   }
 
   diffChildren(
-    oldNode,
-    newNode,
+    oldNode.children || [],
+    newNode.children || [],
     patches,
     currPatches,
     index

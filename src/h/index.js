@@ -79,6 +79,6 @@ function h(tagName, props, ...children) {
     return new VNode(tagInfo.tagName, props, children);
   } else if (typeof tagName === 'function') {
     // use `new` in case it is a class.
-    return new tagName(props, children);
+    return new tagName(props, ...children);
   }
 }

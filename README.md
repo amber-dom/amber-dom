@@ -6,7 +6,7 @@
 
 - Lightweight & efficient
 - Simple, robust & trustful
-- Build dom trees in **hyperscript** or **JSX**
+- Build dom trees in **hyperscript** or **jsx**
 
 ## Why Another Virtual Dom Library?
 
@@ -90,9 +90,9 @@ Then visit `http://localhost:8080`, you'll see tests.
 
 It is recommanded to read the docs in the following order.
 
-1. For details of creating a virtual dom tree, read [docs/h.md](docs/h.md).
-2. For details of `diff`, read [docs/diff.md](docs/diff.md).
-3. For details of `patch`, read [patch](docs/patch.md).
+1. For details of creating a virtual dom tree, see [docs/creatingVTree](docs/creatingVTree.md).
+2. For details of `diff`, see [docs/diff](docs/diff.md).
+3. For details of `patch`, see [docs/patch](docs/patch.md).
 
 ## License
 MIT

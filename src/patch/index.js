@@ -64,7 +64,7 @@ function applyPatches(domNode, patches) {
           // detach all event listeners added previously
           patch.node.detachEventListeners();
           if (typeof props[propName] === 'function')
-            domNode.addEventListeners(_events[1], props[propName], false);
+            domNode.addEventListener(_events[1], props[propName], false);
         }
 
         else if (props[propName] === void 0)

@@ -90,6 +90,30 @@ describe('patch Module', () => {
       expect(v1Elem.textContent).to.be('This is another content');
     });
 
+    it('PROPS, when event handler changes, the previously handler will be detached.', () => {
+      let message = [];
+
+      function handler1() { message.push('handler1 was invoked.'); }
+      function handler2() { message.push('handler2 was invoked.'); }
+
+      const butt1 = h('button', {
+        'ev-click': handler1
+      }, 'Click me');
+
+      const butt2 = h('button', {
+        'ev-click': handler2
+      }, 'Click me');
+
+      let patches = diff(butt1, butt2);
+      let butt1Elem = butt1.render();
+      let clickEvent = new Event('click');
+      patch(butt1Elem, patches);
+
+      // handler1 will not be invoked.
+      butt1Elem.dispatchEvent(clickEvent);
+      expect(message).to.eql(['handler2 was invoked.']);
+    });
+
     it('REPLACE', () => {
       const v1 = h('div', h('h1', 'Heading 1'), h('h2', 'Heading 2'));
       const v2 = h('div', h('div', 'Heading 1'), h('div', 'Heading 2'));

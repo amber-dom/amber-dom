@@ -529,7 +529,7 @@
             if (_events = propName.match(eventHookRe)) {
               // detach all event listeners added previously
               patch.node.detachEventListeners();
-              if (typeof props[propName] === 'function') domNode.addEventListeners(_events[1], props[propName], false);
+              if (typeof props[propName] === 'function') domNode.addEventListener(_events[1], props[propName], false);
             } else if (props[propName] === void 0) domNode.removeAttribute(propName !== 'className' ? propName : 'class');else domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
           }
           break;

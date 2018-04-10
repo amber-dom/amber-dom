@@ -1,6 +1,6 @@
 # <center>amber-dom</center>
 
-**amber-dom** is yet another lightweight virtual-dom library without too many concepts. It is simple, robust & trustful.
+**amber-dom** is yet another lightweight virtual-dom library without too many concepts. It is simple, robust & efficient.
 
 ## Features
 

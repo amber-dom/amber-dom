@@ -11,10 +11,6 @@ export default [{
     name: 'amberdom',
     sourcemap: true
   },
-  watch: {
-    exclude: 'node_modules/**'
-  }
-  ,
   plugins: [
     babel({
       exclude: 'node_modules/**'

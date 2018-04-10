@@ -4,7 +4,7 @@
   "description": "A lightweight virtual dom with diffing & patching algorithm.",
   "main": "index.js",
   "scripts": {
-    "dev": "rollup --config rollup.config.dev.js"
+    "dev": "rollup --config rollup.config.dev.js --watch"
   },
   "repository": {
     "type": "git",

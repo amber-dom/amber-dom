@@ -492,16 +492,21 @@
   function walk$1(domNode, patches, walker) {
     var currPatches = patches[walker.index];
 
+    // changes should be applied for this node first
+    // in case one of childNodes of `domNode` is removed.
+    // Thus if patches are applied to childNodes first,
+    // and if that patched child node is later on removed,
+    // no effect will be taken into account.
+    if (currPatches) {
+      applyPatches(domNode, currPatches);
+    }
+
     if (domNode.childNodes) {
       var childArr = [].slice.call(domNode.childNodes);
       childArr.forEach(function (child, i) {
         walker.index++;
         walk$1(child, patches, walker);
       });
-    }
-
-    if (currPatches) {
-      applyPatches(domNode, currPatches);
     }
   }
 
@@ -552,7 +557,7 @@
 
   // TODO: Add batch.
   function reorderChildren(domNode, moves) {
-    var childNodes = Array.prototype.slice.call(domNode.childNodes);
+    var childNodes = domNode.childNodes;
     var node = void 0;
 
     moves.forEach(function (move) {
@@ -560,19 +565,18 @@
         case 'INSERT':
           try {
             node = move.item.render();
-            childNodes.splice(move.index, 0, node);
+            domNode.insertBefore(node, childNodes[move.index]);
           } catch (e) {
             console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
           }
           break;
 
         case 'REMOVE':
-          childNodes.splice(move.index, 1);
+          domNode.removeChild(childNodes[move.index]);
           break;
 
         case 'MOVE':
-          node = childNodes.splice(move.from, 1)[0];
-          childNodes.splice(move.to, 0, node);
+          domNode.insertBefore(childNodes[move.from], childNodes[move.to]);
           break;
       }
     });

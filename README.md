@@ -23,7 +23,7 @@ mkdir vdom-demo && cd vdom-demo
 npm i amber-dom
 ```
 
-## A Ticking Clock Example
+## Example
 
 If you don't want any set up, just use a script tag to import `amber-dom` from `node_modules/amber-dom/dist/amberdom-browser.js`. An example of a ticking clock is below:
 
@@ -71,6 +71,13 @@ If you don't want any set up, just use a script tag to import `amber-dom` from `
 Just copy it and save it to `index.html` on your current root directory, and then open it in your browser. Press `F12`, you should see `amber-dom` updates only what's necessary:
 
 ![](ticking-example.gif)
+
+To see tests on `amber-dom`, run:
+
+```bash
+npm run dev
+```
+Then visit `http://localhost:8080`, you'll see tests.
 
 ## Documentation
 

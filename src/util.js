@@ -5,3 +5,5 @@ export function isArray (obj) {
 export function isEmpty(obj) {
   return Object.keys(obj|| {}).length === 0;
 }
+
+export const eventHookRe = /^ev\-([a-z]+)/;

@@ -18,7 +18,7 @@ describe('diff Module', () => {
       let patches = diff(v1, v2);
 
       expect(patches).to.eql({
-        0: [{ type: 'REPLACE', node: h("h1") }]
+        0: [{ type: 'REPLACE', node: h("h1"), oldNode: v1 }]
       });
     });
 
@@ -29,10 +29,10 @@ describe('diff Module', () => {
 
       expect(patches).to.eql({
         1: [
-          { type: 'REPLACE', node: h('div', 'Heading 1') }
+          { type: 'REPLACE', node: h('div', 'Heading 1'), oldNode: h('h1', 'Heading 1') }
         ],
         3: [
-          { type: 'REPLACE', node: h('div', 'Heading 2') }
+          { type: 'REPLACE', node: h('div', 'Heading 2'), oldNode: h('h2', 'Heading 2') }
         ]
       })
     })
@@ -53,8 +53,8 @@ describe('diff Module', () => {
           type: 'REORDER',
           moves: [
             { type: 'MOVE', from: 1, to: 0 },
-            { type: 'INSERT', index: 1, item: h('li', { key: 'another one' }, 'Hi') },
-            { type: 'REMOVE', index: 2 }
+            { type: 'INSERT', index: 1, node: h('li', { key: 'another one' }, 'Hi') },
+            { type: 'REMOVE', index: 2, node: h('li', { key: 'holla' }, 'Hola') }
           ]
         }]
       });
@@ -81,7 +81,7 @@ describe('diff Module', () => {
       expect(patches[0]).to.eql([{
         type: 'REORDER',
         moves: [
-          { type: 'INSERT', index: 2, item: h('li', 'shshsh') }
+          { type: 'INSERT', index: 2, node: h('li', 'shshsh') }
         ]
       }]);
 
@@ -90,7 +90,7 @@ describe('diff Module', () => {
         {
           type: 'REORDER',
           moves: [
-            { type: 'REMOVE', index: 2, item: null }
+            { type: 'REMOVE', index: 2, node: null }
           ]
         }
       ])
@@ -103,9 +103,9 @@ describe('diff Module', () => {
 
       expect(patches).to.eql({
         // remove child 'span'
-        0: [{ type: 'REORDER', moves: [{ type: 'REMOVE', index: 1, item: null }] }],
+        0: [{ type: 'REORDER', moves: [{ type: 'REMOVE', index: 1, node: null }] }],
         // replace ' world' with 'hello world'.
-        1: [{ type: 'REPLACE', node: 'hello world' }]
+        1: [{ type: 'REPLACE', node: 'hello world', oldNode: h('span', 'hello') }]
       });
     });
 
@@ -115,7 +115,7 @@ describe('diff Module', () => {
 
       let patches = diff(v1, v2);
       expect(patches).to.eql({
-        0: [{ type: 'PROPS', props: { 'data-main': 'else' } }]
+        0: [{ type: 'PROPS', props: { 'data-main': 'else' }, node: v1 }]
       });
     });
 
@@ -138,10 +138,12 @@ describe('diff Module', () => {
       expect(patches).to.eql({
         0: [
           {
-            type: 'PROPS', props: {
+            type: 'PROPS',
+            props: {
               className: 'main',
               style: 'color: black; '
-            }
+            },
+            node: v1
           }
         ]
       })

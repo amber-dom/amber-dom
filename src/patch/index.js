@@ -1,5 +1,6 @@
 import VNode from '../vnode/index';
-import patchType from '../diff/patch-type.js';
+import patchType from '../diff/patch-type';
+import { eventHookRe } from '../util';
 export default patch;
 
 
@@ -38,7 +39,7 @@ function walk(domNode, patches, walker) {
  * @param {Array} patch 
  */
 function applyPatches(domNode, patches) {
-  let props, newNode;
+  let props, newNode, _events;
 
   patches.forEach(patch => {
     switch(patch.type) {
@@ -48,16 +49,25 @@ function applyPatches(domNode, patches) {
         : typeof patch.node === 'string'
         ? document.createTextNode(patch.node)
         : new Error('You might be using a custom node, if so, you need to provide a render function.');
+      
       if (newNode instanceof Error) {
         throw newNode;
       }
+      patch.oldNode.detachEventListeners(); // avoid memory leaking.
       domNode.parentNode.replaceChild(newNode, domNode);
       break;
 
     case PROPS:
       props = patch.props;
       for (let propName in props) {
-        if (props[propName] === void 0)
+        if ((_events = propName.match(eventHookRe))) {
+          // detach all event listeners added previously
+          patch.node.detachEventListeners();
+          if (typeof props[propName] === 'function')
+            domNode.addEventListeners(_events[1], props[propName], false);
+        }
+
+        else if (props[propName] === void 0)
           domNode.removeAttribute(propName !== 'className' ? propName : 'class');
         else
           domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
@@ -91,7 +101,7 @@ function reorderChildren(domNode, moves) {
   switch(move.type) {
     case 'INSERT':
       try {
-        node = move.item.render();
+        node = move.node.render();
         domNode.insertBefore(node, childNodes[move.index]);
       } catch (e) {
         console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
@@ -100,6 +110,7 @@ function reorderChildren(domNode, moves) {
 
     case 'REMOVE':
       domNode.removeChild(childNodes[move.index]);
+      move.node.detachEventListeners();
       break;
 
     case 'MOVE':

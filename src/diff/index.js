@@ -43,7 +43,8 @@ function walk(oldNode, newNode, patches, index) {
     
       currPatches.push({
         type: REPLACE,
-        node: newNode
+        node: newNode,
+        oldNode: oldNode  // for detaching event listeners.
       });
       patches[index] = currPatches;
       // do not diff their children anymore.
@@ -53,7 +54,8 @@ function walk(oldNode, newNode, patches, index) {
   else if (!isEmpty(propPatches)) {
     currPatches.push({
       type: PROPS,
-      props: propPatches
+      props: propPatches,
+      node: oldNode // for detaching event listeners.
     });
   }
 

@@ -4,7 +4,8 @@
   "description": "A lightweight virtual dom with diffing & patching algorithm.",
   "main": "index.js",
   "scripts": {
-    "dev": "rollup --config rollup.config.dev.js --watch"
+    "dev": "rollup --config rollup.config.dev.js --watch",
+    "build": "rollup --config rollup.config.build.js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-livereload": "^0.6.0",
     "rollup-plugin-serve": "^0.4.2",
+    "rollup-plugin-uglify": "^3.0.0",
     "virtual-dom": "^2.1.1"
   }
 }

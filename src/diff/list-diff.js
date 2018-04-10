@@ -43,7 +43,7 @@ function diff(oldList, newList, key) {
       moves.push({
         type: op,
         index: i,
-        item: newList[i] || null  // It doesn't matter what.
+        node: newList[i] || null  // It doesn't matter what.
       });
     }
 
@@ -66,7 +66,7 @@ function diff(oldList, newList, key) {
       moves.push({
         type: 'INSERT',
         index: newIndex,
-        item: newList[newIndex]
+        node: newList[newIndex]
       });
       diffed.splice(newIndex, 0, newList[newIndex]);
 
@@ -101,9 +101,9 @@ function diff(oldList, newList, key) {
     if (newListKeys.indexOf(key) === -1) {
       moves.push({
         type: 'REMOVE',
-        index: newListLength  // all extra items must've been moved to end.
+        index: newListLength,  // all extra items must've been moved to end.
+        node: diffed.splice(newListLength, 1)[0]
       });
-      diffed.splice(newListLength, 1);
     }
   });
 

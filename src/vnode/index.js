@@ -1,8 +1,7 @@
 import h from '../h/index';
-import { isArray } from '../util';
+import { isArray, eventHookRe } from '../util';
 export default VNode;
 
-const eventHookRe = /^ev\-([a-z]+)/;
 
 class VNode {
   /**
@@ -15,13 +14,13 @@ class VNode {
     this.props = props;
     this.children = children;
     this.key = props.key || void 0;
+    this.cleanups = []; // for cleaning up event listeners.
     this.count = children.reduce((acc, child) => {
       if (child instanceof VNode)
         return child.count + acc + 1;
       else
         return acc + 1;
     }, 0);
-    this.cleanups = []; // for cleaning up event listeners.
 
     delete props.key; // no key will be needed anymore.
   }
@@ -78,28 +77,20 @@ class VNode {
     this.children.forEach(child => {
       var childElement;
 
+      // It is a Text node.
       if (typeof child === 'string') {
         
         childElement = document.createTextNode(child);  
       }
-      // It is a VNode.
-      else if (child instanceof VNode) {
+      // It is a VNode or custom node.
+      else if (child instanceof VNode ||
+        (child.render && typeof child.render === 'function')
+      ) {
         childElement = child.render();
       }
-      // FIXME: might be buggy.
-      // It is a custom-defined node.
-      else {
-        var _render = child.render || void 0;
 
-        // It is defined as a class.
-        if (typeof _render === 'function') {
-          _render.bind(child);
-          childElement = _render()
-        }
-        // defined as a function.
-        else {
-          childElement = child.render();
-        }
+      else {
+        throw new Error('Custom-defined node must provide a `render` method.');
       }
       element.appendChild(childElement);
     });

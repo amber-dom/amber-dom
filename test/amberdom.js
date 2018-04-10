@@ -13,11 +13,11 @@
     return Object.keys(obj || {}).length === 0;
   }
 
+  var eventHookRe = /^ev\-([a-z]+)/;
+
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-  var eventHookRe = /^ev\-([a-z]+)/;
 
   var VNode = function () {
     /**
@@ -32,10 +32,10 @@
       this.props = props;
       this.children = children;
       this.key = props.key || void 0;
+      this.cleanups = []; // for cleaning up event listeners.
       this.count = children.reduce(function (acc, child) {
         if (child instanceof VNode) return child.count + acc + 1;else return acc + 1;
       }, 0);
-      this.cleanups = []; // for cleaning up event listeners.
 
       delete props.key; // no key will be needed anymore.
     }
@@ -82,29 +82,17 @@
         this.children.forEach(function (child) {
           var childElement;
 
+          // It is a Text node.
           if (typeof child === 'string') {
 
             childElement = document.createTextNode(child);
           }
-          // It is a VNode.
-          else if (child instanceof VNode) {
+          // It is a VNode or custom node.
+          else if (child instanceof VNode || child.render && typeof child.render === 'function') {
               childElement = child.render();
+            } else {
+              throw new Error('Custom-defined node must provide a `render` method.');
             }
-            // FIXME: might be buggy.
-            // It is a custom-defined node.
-            else {
-                var _render = child.render || void 0;
-
-                // It is defined as a class.
-                if (typeof _render === 'function') {
-                  _render.bind(child);
-                  childElement = _render();
-                }
-                // defined as a function.
-                else {
-                    childElement = child.render();
-                  }
-              }
           element.appendChild(childElement);
         });
 
@@ -266,7 +254,7 @@
         moves.push({
           type: op,
           index: i,
-          item: newList[i] || null // It doesn't matter what.
+          node: newList[i] || null // It doesn't matter what.
         });
       }
 
@@ -287,7 +275,7 @@
         moves.push({
           type: 'INSERT',
           index: newIndex,
-          item: newList[newIndex]
+          node: newList[newIndex]
         });
         diffed.splice(newIndex, 0, newList[newIndex]);
 
@@ -322,9 +310,9 @@
       if (newListKeys.indexOf(key) === -1) {
         moves.push({
           type: 'REMOVE',
-          index: newListLength // all extra items must've been moved to end.
+          index: newListLength, // all extra items must've been moved to end.
+          node: diffed.splice(newListLength, 1)[0]
         });
-        diffed.splice(newListLength, 1);
       }
     });
 
@@ -415,7 +403,8 @@
 
       currPatches.push({
         type: REPLACE$2,
-        node: newNode
+        node: newNode,
+        oldNode: oldNode // for detaching event listeners.
       });
       patches[index] = currPatches;
       // do not diff their children anymore.
@@ -425,7 +414,8 @@
     else if (!isEmpty(propPatches)) {
         currPatches.push({
           type: PROPS$2,
-          props: propPatches
+          props: propPatches,
+          node: oldNode // for detaching event listeners.
         });
       }
 
@@ -517,23 +507,30 @@
    */
   function applyPatches(domNode, patches) {
     var props = void 0,
-        newNode = void 0;
+        newNode = void 0,
+        _events = void 0;
 
     patches.forEach(function (patch) {
       switch (patch.type) {
         case REPLACE$3:
           newNode = patch.node instanceof VNode || patch.node.render ? patch.node.render() // an instance of VNode or a custom node.
           : typeof patch.node === 'string' ? document.createTextNode(patch.node) : new Error('You might be using a custom node, if so, you need to provide a render function.');
+
           if (newNode instanceof Error) {
             throw newNode;
           }
+          patch.oldNode.detachEventListeners(); // avoid memory leaking.
           domNode.parentNode.replaceChild(newNode, domNode);
           break;
 
         case PROPS$3:
           props = patch.props;
           for (var propName in props) {
-            if (props[propName] === void 0) domNode.removeAttribute(propName !== 'className' ? propName : 'class');else domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
+            if (_events = propName.match(eventHookRe)) {
+              // detach all event listeners added previously
+              patch.node.detachEventListeners();
+              if (typeof props[propName] === 'function') domNode.addEventListeners(_events[1], props[propName], false);
+            } else if (props[propName] === void 0) domNode.removeAttribute(propName !== 'className' ? propName : 'class');else domNode.setAttribute(propName !== 'className' ? propName : 'class', props[propName]);
           }
           break;
 
@@ -564,7 +561,7 @@
       switch (move.type) {
         case 'INSERT':
           try {
-            node = move.item.render();
+            node = move.node.render();
             domNode.insertBefore(node, childNodes[move.index]);
           } catch (e) {
             console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
@@ -573,6 +570,7 @@
 
         case 'REMOVE':
           domNode.removeChild(childNodes[move.index]);
+          move.node.detachEventListeners();
           break;
 
         case 'MOVE':
@@ -582,14 +580,14 @@
     });
   }
 
-  var index = {
+  var amberdom = {
     h: h,
     diff: diff$1,
     patch: patch,
     VNode: VNode
   };
 
-  return index;
+  return amberdom;
 
 })));
 //# sourceMappingURL=amberdom.js.map

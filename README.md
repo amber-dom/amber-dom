@@ -42,22 +42,27 @@ If you don't want any set up, just use a script tag to import `amber-dom` from `
           h('h1', 'Hello amber-dom!'),
           h('h2', 'It is ', state.time)
         )
-        let appDTree = appVTree.render()              // render to a real dom tree
-        let timer
+        let appDTree = appVTree.render()        // render to a real dom tree
 
         function updater() {
-          clearTimeout(timer);
-          state.time = new Date().toLocaleTimeString()
+          let timer
 
-          let newVTree = h('div#app',
-            h('h1', 'Hello amber-dom!'),
-            h('h2', 'It is ', state.time)
-          )
-          let patches = diff(appVTree, newVTree)  // diff
+          updateTime()
 
-          appVTree = newVTree
-          patch(appDTree, patches)               // patch
-          timer = setTimeout(updater, 1000)
+          function updateTime() {
+            clearTimeout(timer)
+            state.time = new Date().toLocaleTimeString()
+
+            let newVTree = h('div#app',
+              h('h1', 'Hello amber-dom!'),
+              h('h2', 'It is ', state.time)
+            )
+            let patches = diff(appVTree, newVTree) // diff
+
+            appVTree = newVTree
+            patch(appDTree, patches)               // patch
+            timer = setTimeout(updateTime, 1000)
+          }
         }
 
         document.body.appendChild(appDTree)     // append to body
@@ -75,17 +80,19 @@ Just copy it and save it to `index.html` on your current root directory, and the
 To see tests on `amber-dom`, run:
 
 ```bash
+cd node_modules/amber-dom
+
 npm run dev
 ```
 Then visit `http://localhost:8080`, you'll see tests.
 
 ## Documentation
 
-Read the docs in the following recommended order.
+It is recommanded to read the docs in the following order.
 
-1. For details of creating a virtual dom tree, read [h](docs/h.md).
-2. For details of `diff`, read [this](docs/diff.md).
-3. Lastly read [patch](docs/patch.md).
+1. For details of creating a virtual dom tree, read [docs/h.md](docs/h.md).
+2. For details of `diff`, read [docs/diff.md](docs/diff.md).
+3. For details of `patch`, read [patch](docs/patch.md).
 
 ## License
 MIT

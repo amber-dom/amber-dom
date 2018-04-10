@@ -527,7 +527,7 @@
           if (newNode instanceof Error) {
             throw newNode;
           }
-          domNode.parentNode.replaceChild(domNode, newNode);
+          domNode.parentNode.replaceChild(newNode, domNode);
           break;
 
         case PROPS$3:

@@ -1,6 +1,6 @@
 const { diff, patch } = amberdom;
 
-describe('diff', () => {
+describe('diff Module', () => {
   describe('#diff', () => {
     it('TEXT', () => {
       const v1 = h('div', 'Hello world!');

@@ -1,6 +1,6 @@
 {
   "name": "amber-dom",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A lightweight virtual dom with diffing & patching algorithm.",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "jsx",
     "virtual-hyperscript"
   ],
-  "author": "Alien",
+  "author": "alieeeeen",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Alieeeeen/amber-dom/issues"

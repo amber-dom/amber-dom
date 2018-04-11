@@ -1,10 +1,10 @@
 ## amber-dom/diff
 
-`amber-dom/diff` diffs 2 VTrees created by `h` function in O(n) time. This is a matter of fact everyone knows it. Almost all virtual dom libraries have a depth-first-search diffing algorithm, in O(n) time.
+Diff module. Diffs 2 virtual trees in O(n) time. It is a matter of fact that everyone knows.
 
 ### diff(oldVTree, newVTree)
 
-Diffs `newVTree` against `oldVTree` & returns a patch object holding all patches to apply.
+Diffs `newVTree` against `oldVTree`, and returns an object holding all patches to apply.
 
 #### oldVTree
 

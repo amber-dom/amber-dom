@@ -48,7 +48,7 @@ function applyPatches(domNode, patches) {
         ? patch.node.render() // an instance of VNode or a custom node.
         : typeof patch.node === 'string'
         ? document.createTextNode(patch.node)
-        : new Error('You might be using a custom node, if so, you need to provide a render function.');
+        : new Error('You might be using a custom-defined node, if so, you need to provide a render function.');
       
       if (newNode instanceof Error) {
         throw newNode;

@@ -47,7 +47,7 @@ let patches = diff(div, p)  //=> { 0: [{ type: 'REPLACE', node: p }] }
 const div2 = h('div', { className: 'main' })
 const div3 = h('div', { className: 'subcontent' })
 
-patches = diff(div2, div3)  
+patches = diff(div2, div3)
 /*=>
 {
     0: [

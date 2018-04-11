@@ -14,6 +14,7 @@ function patch(domRoot, patches) {
 // `walk` updates the domTree buttom-up.
 function walk(domNode, patches, walker) {
   const currPatches = patches[walker.index];
+  let   skipChildren = false; // Is it a REPLACE patch?
 
   // changes should be applied for this node first
   // in case one of childNodes of `domNode` is removed.
@@ -21,10 +22,10 @@ function walk(domNode, patches, walker) {
   // and if that patched child node is later on removed,
   // no effect will be taken into account.
   if(currPatches) {
-    applyPatches(domNode, currPatches);
+    skipChildren = applyPatches(domNode, currPatches);
   }
 
-  if (domNode.childNodes) {
+  if (domNode.childNodes && !skipChildren) {
     const childArr = [].slice.call(domNode.childNodes);
     childArr.forEach((child, i) => {
       walker.index++;
@@ -36,7 +37,8 @@ function walk(domNode, patches, walker) {
 /**
  * patch a single dom node.
  * @param {NodeList} domNode 
- * @param {Array} patch 
+ * @param {Array} patch
+ * @returns {Boolean} whether to patch children or not. 
  */
 function applyPatches(domNode, patches) {
   let props, newNode, _events;
@@ -55,7 +57,7 @@ function applyPatches(domNode, patches) {
       }
       patch.oldNode.detachEventListeners(); // avoid memory leaking.
       domNode.parentNode.replaceChild(newNode, domNode);
-      break;
+      return true;   // there'll be no more patches.
 
     case PROPS:
       props = patch.props;
@@ -90,6 +92,8 @@ function applyPatches(domNode, patches) {
       throw new Error('Some internal error.');
     }
   });
+  // do not skip children.
+  return false;
 }
 
 // TODO: Add batch.

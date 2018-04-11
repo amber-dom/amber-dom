@@ -188,6 +188,9 @@
         props.className || (props.className = '');
         props.className += ' ' + tagInfo.className;
       }
+      if (tagInfo.id) {
+        props.id = props.id ? props.id : tagInfo.id;
+      }
       // any children will be handled by VNode, remember there's no
       // VText.
       return new VNode(tagInfo.tagName, props, children);

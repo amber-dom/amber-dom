@@ -1,4 +1,5 @@
-const { h } = amberdom;
+(function() {
+const { h, VNode } = amberdom;
 
 describe('h Module', () => {
   describe('#h', () => {
@@ -70,7 +71,7 @@ describe('h Module', () => {
       expect(divElem.textContent).to.be("hello world");
     });
 
-    it('Event listeners. Expand this item to see how I\'ve tested it.', () => {
+    it('Add event listeners.', () => {
       let wasClicked = false;
 
       function handleClick(ev) {
@@ -91,7 +92,7 @@ describe('h Module', () => {
       expect(wasClicked).to.be(true);
     });
 
-    it('Detaching event listeners. Expand this item to see how I\'ve tested it.', () => {
+    it('Detach event listeners.', () => {
       let on = false;
 
       function onceOnYouCannotToggleItOff() {
@@ -113,5 +114,88 @@ describe('h Module', () => {
         buttonElem.dispatchEvent(event);
         expect(on).to.be(true);
     });
+
+    it('Custom-defined stateless node', () => {
+      function Block(props, header, body, footer) {
+        return (
+          h('div#block-wrapper.box', props,
+            h('div.header', header),
+            h('div.content', body),
+            h('div.footer', footer)
+          ));
+      }
+
+      const block = h(Block, null, 'Title', 'Article1', 'Footer');
+      const blockElem = block.render();
+
+      // root
+      expect(blockElem.tagName).to.be('DIV');
+      expect(blockElem.id).to.be('block-wrapper');
+      expect(blockElem.className).to.be(' box');
+
+      // child 1
+      expect(blockElem.childNodes[0].tagName).to.be('DIV');
+      expect(blockElem.childNodes[0].className).to.be(' header');
+      expect(blockElem.childNodes[0].textContent).to.be('Title');
+
+      expect(blockElem.childNodes[1].tagName).to.be('DIV');
+      expect(blockElem.childNodes[1].className).to.be(' content');
+      expect(blockElem.childNodes[1].textContent).to.be('Article1');
+      
+      expect(blockElem.childNodes[2].tagName).to.be('DIV');
+      expect(blockElem.childNodes[2].className).to.be(' footer');
+      expect(blockElem.childNodes[2].textContent).to.be('Footer');
+    });
+
+    it('Cutom-defined node with state', () => {
+      class Block extends VNode {
+        constructor(props, header, body, footer) {
+          super('', {}, []);
+          this.header = header;
+          this.body = body;
+          this.footer = footer;
+          this.props = props;
+
+          this.vtree = this.initVTree();
+        }
+
+        // You may write some logic here to watch state.
+
+        initVTree() {
+          return (
+            h('div#block-wrapper.box', this.props,
+              h('div.header', this.header),
+              h('div.content', this.body),
+              h('div.footer', this.footer)
+            ));
+        }
+
+        render() {
+          return this.vtree.render();
+        }
+      }
+
+      const block = h(Block, null, 'Title', 'Article1', 'Footer');
+      const blockElem = block.render();
+
+      // root
+      expect(blockElem.tagName).to.be('DIV');
+      expect(blockElem.id).to.be('block-wrapper');
+      expect(blockElem.className).to.be(' box');
+
+      // child 1
+      expect(blockElem.childNodes[0].tagName).to.be('DIV');
+      expect(blockElem.childNodes[0].className).to.be(' header');
+      expect(blockElem.childNodes[0].textContent).to.be('Title');
+
+      expect(blockElem.childNodes[1].tagName).to.be('DIV');
+      expect(blockElem.childNodes[1].className).to.be(' content');
+      expect(blockElem.childNodes[1].textContent).to.be('Article1');
+      
+      expect(blockElem.childNodes[2].tagName).to.be('DIV');
+      expect(blockElem.childNodes[2].className).to.be(' footer');
+      expect(blockElem.childNodes[2].textContent).to.be('Footer');
+    });
   })
 });
+})()

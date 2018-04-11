@@ -1,4 +1,5 @@
-const { diff, patch } = amberdom;
+(function() {
+const { h, diff, patch } = amberdom;
 
 describe('diff Module', () => {
   describe('#diff', () => {
@@ -150,3 +151,4 @@ describe('diff Module', () => {
     });
   });
 });
+})()

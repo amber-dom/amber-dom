@@ -1,3 +1,5 @@
+(function(){
+
 const { VNode } = amberdom;
 
 describe('VNode', () => {
@@ -79,3 +81,4 @@ describe('VNode', () => {
     })
   })
 })
+})()

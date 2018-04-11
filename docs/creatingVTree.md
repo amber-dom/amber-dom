@@ -113,7 +113,7 @@ var vtree1 = amberdom.h('div#app',
 
 `amber-dom` provides an `h` function that's compliant with transformed `react-jsx`(personally, I think that using `h` function directly will be more flexible).
 
-Make sure you've install `babel-plugin-transform-react-jsx` & set up `.babelrc` properly:
+Make sure you've installed `babel-plugin-transform-react-jsx` & set up `.babelrc` properly:
 
 ```json
 // .babelrc

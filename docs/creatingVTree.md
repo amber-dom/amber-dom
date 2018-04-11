@@ -1,10 +1,8 @@
-This artical presents how you can create a virtual dom tree & render them in a real dom tree.
-
-# Create a VTree using `amberdom.h`
+## Create a VTree using `amberdom.h`
 
 `amberdom` provides an `h` function to create virtual dom trees, which is an instance of `VNode`:
 
-## `h(tagName, props, ...children)`
+### `h(tagName, props, ...children)`
 
 Here's an example:
 
@@ -13,7 +11,7 @@ var vtree = amberdom.h('a', { href: 'https://www.npmjs.com/package/amber-dom' },
 ```
 One thing to note is, unlike [hyperscript](https://github.com/hyperhype/hyperscript), `props` must be placed as the 2nd parameter, if you provide one.
 
-### tagName
+#### tagName
 
 Type: `String|Function`
 
@@ -37,7 +35,7 @@ var dtree = vtree.render()  // => <h1>Hello Allen</h1>
 document.body.appendChild(dtree)
 ```
 
-### props(optional)
+#### props(optional)
 
 Type: `Object`
 
@@ -94,11 +92,11 @@ var vtree2 = amberdom.h('div', {
 })
 ```
 
-### children
+#### children
 
 Type: `VNode|String`
 
-A virtual dom element can have any number of children. There is no `VText` in `amberdom`. Thus if it is a text node, simply provide a string.
+A virtual dom element can have any number of children. There is no `VText` in `amberdom`. Thus if a child is a text node, simply provide a string.
 
 Example:
 
@@ -111,7 +109,7 @@ var vtree1 = amberdom.h('div#app',
 )
 ```
 
-# Create a VTree using `jsx`
+## Create a VTree using `jsx`
 
 `amber-dom` provides an `h` function that's compliant with transformed `react-jsx`(personally, I think that using `h` function directly will be more flexible).
 
@@ -173,4 +171,25 @@ var vElem = h(Hello, { massage: "Allen" });
 var elem = vElem.render();
 
 document.body.appendChild(elem);
+```
+
+## Rendering a VTree to a real dom tree
+
+As you've seen on above examples, a `VNode` instance can call `render()` method to render itself to a real dom tree. It is also possible to overwrite the default behavior of `render()` by extending `VNode`:
+
+
+```js
+import { VNode } from 'amber-dom'
+
+class Component extends VNode {
+  // might set up internal states.
+  constructor() {
+    super(arguments)
+  }
+
+  // overwrite render with what every you want.
+  render() {
+    ...
+  }
+}
 ```

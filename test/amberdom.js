@@ -498,6 +498,9 @@
         walker.index++;
         walk$1(child, patches, walker);
       });
+    } else if (skipChildren) {
+      // don't forget to add them up.
+      walker.index += currPatches[0].oldNode.count;
     }
   }
 
@@ -510,7 +513,8 @@
   function applyPatches(domNode, patches) {
     var props = void 0,
         newNode = void 0,
-        _events = void 0;
+        _events = void 0,
+        skipChildren = false;
 
     patches.forEach(function (patch) {
       switch (patch.type) {
@@ -523,7 +527,8 @@
           }
           patch.oldNode.detachEventListeners(); // avoid memory leaking.
           domNode.parentNode.replaceChild(newNode, domNode);
-          return true; // there'll be no more patches.
+          skipChildren = true; // there'll be no more patches.
+          break;
 
         case PROPS$3:
           props = patch.props;
@@ -553,7 +558,7 @@
       }
     });
     // do not skip children.
-    return false;
+    return skipChildren;
   }
 
   // TODO: Add batch.

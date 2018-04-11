@@ -31,6 +31,9 @@ function walk(domNode, patches, walker) {
       walker.index++;
       walk(child, patches, walker);
     });
+  } else if (skipChildren) {
+    // don't forget to add them up.
+    walker.index += currPatches[0].oldNode.count;
   }
 }
 
@@ -41,7 +44,7 @@ function walk(domNode, patches, walker) {
  * @returns {Boolean} whether to patch children or not. 
  */
 function applyPatches(domNode, patches) {
-  let props, newNode, _events;
+  let props, newNode, _events, skipChildren = false;
 
   patches.forEach(patch => {
     switch(patch.type) {
@@ -57,7 +60,8 @@ function applyPatches(domNode, patches) {
       }
       patch.oldNode.detachEventListeners(); // avoid memory leaking.
       domNode.parentNode.replaceChild(newNode, domNode);
-      return true;   // there'll be no more patches.
+      skipChildren = true;   // there'll be no more patches.
+      break;
 
     case PROPS:
       props = patch.props;
@@ -93,7 +97,7 @@ function applyPatches(domNode, patches) {
     }
   });
   // do not skip children.
-  return false;
+  return skipChildren;
 }
 
 // TODO: Add batch.

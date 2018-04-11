@@ -125,6 +125,18 @@ describe('patch Module', () => {
       expect(v1Elem.childNodes[0].textContent).to.be('Heading 1');
       expect(v1Elem.childNodes[1].tagName).to.be('DIV');
       expect(v1Elem.childNodes[1].textContent).to.be('Heading 2');
-    })
+    });
+
+    it('REPLACE a pretty deep node', () => {
+      const v1 = h('div', h('div', h('span', 'deep')), h('div', h('span', 'node')))
+      const v2 = h('div', h('p', h('span', 'deep')), h('p', h('span', 'node')))
+
+      let patches = diff(v1, v2)
+      let v1Elem = v1.render();
+      patch(v1Elem, patches);
+
+      expect(v1Elem.childNodes[0].tagName).to.be('P');
+      expect(v1Elem.childNodes[1].tagName).to.be('P');
+    });
   });
 });

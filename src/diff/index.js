@@ -55,8 +55,9 @@ function walk(oldNode, newNode, patches, index) {
     currPatches.push({
       type: PROPS,
       props: propPatches,
-      node: oldNode // for detaching event listeners.
+      node: oldNode       // for detaching event listeners.
     });
+    newNode.$el = oldNode.$el;
   }
 
   diffChildren(

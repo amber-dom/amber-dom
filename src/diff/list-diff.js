@@ -88,7 +88,8 @@ function diff(oldList, newList, key) {
         to: newIndex
       });
       let _elem = diffed.splice(oldIndex, 1)[0];
-      diffed.splice(newIndex, 0, _elem)
+      diffed.splice(newIndex, 0, _elem);
+      newList[newIndex].$el = oldList[oldIndex].$el;
 
       // It is impossible to move element from front to back.
       indexDeltas[_physicalIndex]++;

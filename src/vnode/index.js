@@ -13,16 +13,17 @@ class VNode {
     this.tagName = tagName;
     this.props = props;
     this.children = children;
-    this.key = props.key || void 0;
+    this.key = (props && props.key);
     this.cleanups = []; // for cleaning up event listeners.
-    this.count = children.reduce((acc, child) => {
+    this.count = children && children.reduce((acc, child) => {
       if (child instanceof VNode)
         return child.count + acc + 1;
       else
         return acc + 1;
     }, 0);
-
-    delete props.key; // no key will be needed anymore.
+    
+    if (this.key)
+      delete props.key; // no key will be needed anymore.
   }
 
   /**

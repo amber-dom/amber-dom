@@ -1,5 +1,5 @@
 import VNode from '../vnode/index';
-import { isArray } from '../util';
+import { isArray, isEmpty } from '../util';
 export default h;
 
 
@@ -35,6 +35,11 @@ function parseTagName(tagName) {
  */
 function h(tagName, props, ...children) {
   var tagInfo, vnode;
+
+  if (typeof tagName === 'function') {
+    // use `new` in case it is a class.
+    return new tagName(props, ...children);
+  }
 
   (props || (props = {}));
   (children || (children = []));
@@ -80,8 +85,7 @@ function h(tagName, props, ...children) {
     // any children will be handled by VNode, remember there's no
     // VText.
     return new VNode(tagInfo.tagName, props, children);
-  } else if (typeof tagName === 'function') {
-    // use `new` in case it is a class.
-    return new tagName(props, ...children);
+  } else {
+    throw new Error('The first parameter to `h` function must be a string or a function.')
   }
 }

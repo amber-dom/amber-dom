@@ -2,7 +2,7 @@
 
 `amberdom` provides an `h` function to create virtual dom trees, which is an instance of `VNode`:
 
-### `h(tagName, props, ...children)`
+### `h(selector, props, ...children)`
 
 Here's an example:
 
@@ -11,29 +11,58 @@ var vtree = amberdom.h('a', { href: 'https://www.npmjs.com/package/amber-dom' },
 ```
 One thing to note is, unlike [hyperscript](https://github.com/hyperhype/hyperscript), `props` must be placed as the 2nd parameter, if you provide one.
 
-#### tagName
+#### selector
 
 Type: `String|Function`
 
-If it is a string, it can be a tag name followed by selectors. For example,
+If it is a string, it can be a tag name followed by CSS selectors. For example,
 
 ```js
-var vtree = amberdom.h('div#app.content.main') // => <div id="app" class="content main"></div>
+import { h } from 'amber-dom'
+
+var vtree = h('div#app.content.main') // => <div id="app" class="content main"></div>
 ```
 
-If it is a function, it should return an instance of `VNode`(an object returned by `h` function):
+However if multiple ids occur, the last one will be the id attribute of the rendered DOM node. For example, `h('div#one#two')` will create a vnode that will render a DOM node with 'two' as its id attribute value.
+
+If `selector` is a function, then this function is considered to be a **custom-defined vnode**. `h` function will call the `selector` function with a `new` operator, and pass the rest of the parameters to it. That means you can write your **custon-defined vnode** in 2 ways:
+
+* **Pure function** — like a virtual tree generator.
+* **Class Constructor** — it is usually a class extended `VNode`. See [docs/VNode](VNode.md) for more.
+
+Example for pure function:
 
 ```js
-// Notice the first param to any custom-defined node
-// is `props`. You'll see later in this article.
-function Hello(props, message) {
-  return amberdom.h('h1', props, 'Hello ', message)
+import { h } from 'amber-dom'
+
+
+function Block(header, body, footer) {
+  return (
+    h('div#block-wrapper.box',
+      h('div.header', header),
+      h('div.content', body),
+      h('div.footer', footer)
+    ))
 }
 
-var vtree = amberdom.h(Hello, 'Allen')
-var dtree = vtree.render()  // => <h1>Hello Allen</h1>
-document.body.appendChild(dtree)
+const tree = h(Block, 'Title', 'Article1', 'Footer')  // the same for 
+                                                      // Block('Title', 'Article1', 'Footer').
+const rootNode = tree.render()
 ```
+
+The reason for this(`selector` as a function), is to stay compatible with [react-jsx](http://facebook.github.io/jsx/).
+
+**WARNING**
+
+If there's a newline between your return statement and your outermost h function, rememeber to add parentheses. Otherwise it wouldn't work because JavaScript engine will treat it as you return `undefined`:
+
+```js
+function DontDoThis() {
+  return
+    h('div', 'Completely wrong!')
+}
+```
+
 
 #### props(optional)
 
@@ -42,10 +71,20 @@ Type: `Object`
 It is optional. You can specify element attributes in this object. For example:
 
 ```js
-var vtree = amberdom.h('div.body-content', {
+import { h } from 'amber-dom'
+
+
+const tree = h('div.body-content', {
   'data-main': 'something',       // quote the key because it contains '-'.
    className: 'content main',     // class for element.
 })
+```
+
+If you don't want to specify any props on your vnode, you can either ignore/omit it or pass in a `null|undefined`:
+
+```js
+h('div', 'content') // ok
+h('div', null, 'content') // ok
 ```
 
 Here are some special props:
@@ -54,27 +93,31 @@ Here are some special props:
     Specify an event hook using `ev-*`:
 
 ```js
-var vtree = amberdom.h('button', {
+const tree = h('button', {
   'ev-click': function handleClick() { console.log('clicked!') }
 }, 'Click me!')
 ```
-When the element is replaced by `amberdom.patch`, event listeners will be detached by `amberdom` automatically, such that you don't have to worry about memory leaking.
+When a DOM node is replaced by `amberdom.patch`, the attached event listeners will be detached by `amberdom` automatically, freeing your concerns about memory leaking.
+
+**WARNING**
+
+There's one special case you might want to pay attention to. Assume you have an old virtual tree, say A, and it rendered a DOM tree & appended the DOM tree to `document`. At this time you generate another virtual tree, say B, which has the identical shape with A. Both tree A & B have listeners(handlers) listen to the same event on the same node, but listeners(handlers) are different. If you're diffing A against B, that is `diff(A, B)`, and patch the DOM tree rendered by A, then A's listeners will be detached.
 
 - **styles**
     Specify inline-style using either a object literal or a string:
 
 ```js
 // object literal
-var vtree = amberdom.h('div', {
+const tree = h('div', {
   style: {
     color: 'red'
   }
-}, 'I\'m red!')
+}, "I'm red!")
 
 // string
-var vtree2 = amberdom.h('div', {
+const tree2 = h('div', {
   style: 'color: black;'
-}, 'I\'m black!')
+}, "I'm black!")
 ```
 
 - **class**
@@ -86,24 +129,24 @@ var vtree1 = amberdom.h('div', {
   className: ['main', 'content']
 })
 
-// string
+// string. Recomanded.
 var vtree2 = amberdom.h('div', {
   className: 'main content'
 })
 ```
 
-#### children
+#### children(optional)
 
 Type: `VNode|String`
 
-A virtual dom element can have any number of children. There is no `VText` in `amberdom`. Thus if a child is a text node, simply provide a string.
+A vnode can have any number of children. There is no `VText` in `amberdom`. Thus if a child is a text node, simply provide a string.
 
 Example:
 
 ```js
 var content = 'Some hola'
 
-var vtree1 = amberdom.h('div#app', 
+var vtree1 = h('div#app', 
   h('h1', h('span', 'Hello'), ' world!'),
   h('div', content)
 )
@@ -111,7 +154,7 @@ var vtree1 = amberdom.h('div#app',
 
 ## Create a VTree using `jsx`
 
-`amber-dom` provides an `h` function that's compliant with transformed `react-jsx`(personally, I think that using `h` function directly will be more flexible).
+`amber-dom` provides an `h` function that's compatible with transformed `react-jsx`. You consider it either good or bad.
 
 Make sure you've installed `babel-plugin-transform-react-jsx` & set up `.babelrc` properly:
 
@@ -140,56 +183,33 @@ function Hello(props) {
   );
 }
 
-const vElem = <Hello massage='Allen' />
-const elem = vElem.render()   // render to a real dom element.
+const elem = <Hello massage='Allen' />
+const rootNode = vElem.render()   // render to a real dom element.
 
 document.body.appendChild(elem)
 ```
 
-And babel will transform it into:
+For more infomation about how babel transforms jsx, try [babel repl](http://babeljs.io/repl/).
+
+## Rendering a virtual tree to DOM tree
+
+A `VNode` instance can call `.render()` function to render a DOM tree. Basic vnodes can be created by calling `h` function.
+
+Sometimes, you might want to store some state inside a customed-defined vnode.
+
+In rare cases, you might want to overwrite `VNode.render()`. In common cases, you will use composition rather than inheritance.
 
 ```js
-function Hello(props) {
-  return h(
-    "div",
-    { id: "app", className: "content main" },
-    h(
-      "h1",
-      null,
-      h(
-        "span",
-        null,
-        "Hello "
-      ),
-      props.message,
-      "!"
-    )
-  );
-}
-
-var vElem = h(Hello, { massage: "Allen" });
-var elem = vElem.render();
-
-document.body.appendChild(elem);
-```
-
-## Rendering a VTree to a real dom tree
-
-As you've seen on above examples, a `VNode` instance can call `render()` method to render itself to a real dom tree. It is also possible to overwrite the default behavior of `render()` by extending `VNode`:
-
-
-```js
-import { VNode } from 'amber-dom'
-
-class Component extends VNode {
-  // might set up internal states.
-  constructor() {
-    super(arguments)
+class Container extends VNode {
+  constructor(childVNodes) {
+    super()
+    this.children = childVNodes
   }
 
-  // overwrite render with what every you want.
   render() {
-    ...
+    return h('div#wrapper.content', this.children).render()
   }
 }
 ```
+
+For more info about `VNode`, read [docs/VNode](VNode.md).

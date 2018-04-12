@@ -31,13 +31,13 @@
       this.tagName = tagName;
       this.props = props;
       this.children = children;
-      this.key = props.key || void 0;
+      this.key = props && props.key;
       this.cleanups = []; // for cleaning up event listeners.
-      this.count = children.reduce(function (acc, child) {
+      this.count = children && children.reduce(function (acc, child) {
         if (child instanceof VNode) return child.count + acc + 1;else return acc + 1;
       }, 0);
 
-      delete props.key; // no key will be needed anymore.
+      if (this.key) delete props.key; // no key will be needed anymore.
     }
 
     /**
@@ -152,6 +152,11 @@
 
     var tagInfo;
 
+    if (typeof tagName === 'function') {
+      // use `new` in case it is a class.
+      return new (Function.prototype.bind.apply(tagName, [null].concat([props], _toConsumableArray(children))))();
+    }
+
     props || (props = {});
     children || (children = []);
 
@@ -194,9 +199,8 @@
       // any children will be handled by VNode, remember there's no
       // VText.
       return new VNode(tagInfo.tagName, props, children);
-    } else if (typeof tagName === 'function') {
-      // use `new` in case it is a class.
-      return new (Function.prototype.bind.apply(tagName, [null].concat([props], _toConsumableArray(children))))();
+    } else {
+      throw new Error('The first parameter to `h` function must be a string or a function.');
     }
   }
 
@@ -301,6 +305,7 @@
         });
         var _elem = diffed.splice(oldIndex, 1)[0];
         diffed.splice(newIndex, 0, _elem);
+        newList[newIndex].$el = oldList[oldIndex].$el;
 
         // It is impossible to move element from front to back.
         indexDeltas[_physicalIndex]++;
@@ -420,6 +425,7 @@
           props: propPatches,
           node: oldNode // for detaching event listeners.
         });
+        newNode.$el = oldNode.$el;
       }
 
     diffChildren(oldNode.children || [], newNode.children || [], patches, currPatches, index);
@@ -484,13 +490,9 @@
   // `walk` updates the domTree buttom-up.
   function walk$1(domNode, patches, walker) {
     var currPatches = patches[walker.index];
-    var skipChildren = false; // Is it a REPLACE patch?
+    var skipChildren = false; // If it is a REPLACE patch, do not walk it.
 
     // changes should be applied for this node first
-    // in case one of childNodes of `domNode` is removed.
-    // Thus if patches are applied to childNodes first,
-    // and if that patched child node is later on removed,
-    // no effect will be taken into account.
     if (currPatches) {
       skipChildren = applyPatches(domNode, currPatches);
     }
@@ -507,12 +509,6 @@
     }
   }
 
-  /**
-   * patch a single dom node.
-   * @param {NodeList} domNode 
-   * @param {Array} patch
-   * @returns {Boolean} whether to patch children or not. 
-   */
   function applyPatches(domNode, patches) {
     var props = void 0,
         newNode = void 0,
@@ -521,16 +517,17 @@
 
     patches.forEach(function (patch) {
       switch (patch.type) {
+        // FIXME: might be buggy.
         case REPLACE$3:
-          newNode = patch.node instanceof VNode || patch.node.render ? patch.node.render() // an instance of VNode or a custom node.
-          : typeof patch.node === 'string' ? document.createTextNode(patch.node) : new Error('You might be using a custom-defined node, if so, you need to provide a render function.');
+          newNode = patch.node instanceof VNode || patch.node.render ? patch.node.render() : typeof patch.node === 'string' ? document.createTextNode(patch.node) : new Error('You might be using a custom-defined node extended from VNode, if so, provide a render function.');
 
           if (newNode instanceof Error) {
             throw newNode;
           }
-          patch.oldNode.detachEventListeners(); // avoid memory leaking.
+
+          patch.oldNode.detachEventListeners();
           domNode.parentNode.replaceChild(newNode, domNode);
-          skipChildren = true; // there'll be no more patches.
+          skipChildren = true;
           break;
 
         case PROPS$3:
@@ -560,7 +557,7 @@
           throw new Error('Some internal error.');
       }
     });
-    // do not skip children.
+
     return skipChildren;
   }
 
@@ -576,7 +573,7 @@
             node = move.node.render();
             domNode.insertBefore(node, childNodes[move.index]);
           } catch (e) {
-            console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
+            console.log('You might be using a custom-defined node extended from VNode, if so, provide a render function.');
           }
           break;
 

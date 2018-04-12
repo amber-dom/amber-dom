@@ -1,96 +1,191 @@
 # <center>amber-dom</center>
 
-**amber-dom** is yet another lightweight virtual-dom library without too many concepts. It is simple, robust & efficient.
+**amber-dom** is yet another lightweight virtual-dom library.
 
 ## Features
 
 - Lightweight & efficient
-- Simple, robust & trustful
-- Build dom trees in **hyperscript** or **jsx**
+- Simple & robust
+- Build dom trees using **hyperscript** or **jsx**
 
 ## Why Another Virtual Dom Library?
 
-Existing virtual dom libraries are either too sophisticated(that they provide too many concepts & interfaces, which might be unfriendly to newbies), or too simple(that cannot be used seriously). `amber-dom` provides another option. In fact, `amber-dom` is used for study purpose, as you can read the code in an afternoon for every detail of it.
+`amber-dom` started as a study project. It aims to give you a basic understanding of diffing algorithm of virtual dom. I hope that it can enlighten you in some way.
 
-Due to its simplicity, you'll use `amber-dom` easily if you're already familiar with [hyperscript](https://github.com/hyperhype/hyperscript) or [react-jsx](http://facebook.github.io/jsx/).
+Existing virtual dom libraries might be much more sophisticated. You might get frustrated when reading their source code. `amber-dom` provides another option. Even if it is simple, it is robust.
+
+Due to its simplicity, you'll use `amber-dom` easily if you're already familiar with [hyperscript](https://github.com/hyperhype/hyperscript). It doesn't matter if you're unfamiliar with it, you can either continue reading this README, or take a glance at [docs/creatingVTree](docs/creatingVTree).
 
 ## Installation
 
+Install it with npm
+
 ```bash
-# create your project directory & cd into it.
-mkdir vdom-demo && cd vdom-demo
-# install amber-dom
 npm i amber-dom
+```
+
+Then you can use it with a bundler, like webpack or rollup.
+
+```js
+import { h, diff, patch } from 'amber-dom'
+
+```
+
+If you don't want any set-up, you can download `amber-dom` from [unpkg.com](https://unpkg.com/amber-dom/dist/amberdom.min.js). Then `window.amberdom` is globally available.
+
+```html
+<script src="https://unpkg.com/amber-dom/dist/amberdom.min.js"></script>
+```
+
+
+## Get Started
+
+`amber-dom` provides 4 basic interfaces:
+
+- **VNode** — a vnode constructor, corresponds to a DOM node. You can call `.render()` on an instance of `VNode` to render a DOM node.
+- **h** — a DSL for creating virtual trees, returning a `VNode` instance representing the root of that virtual tree.
+- **diff** — diffs 2 virtual tree.
+- **patch** — patches a DOM tree with provided patches.
+
+Our hello-world example:
+
+```js
+// 1. set up a render logic. Let's call it a custom node.
+function render(className, message) {
+  return h('h1#app', {
+    className: className
+  }, message)
+}
+
+// 2. set up init UI state.
+let vtree = render('hello', 'Hello world!')  // create a virtual tree.
+const domTree = vtree.render()     // render it to a DOM tree.
+document.body.appendChild(domTree)
+
+// 3. set up a UI logic.
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const newVTree = render('content', 'This is your first amber-dom app.')
+    const patches = diff(vtree, newVTree) // diff
+    patch(domTree, patches) // patch
+    vtree = newVTree
+  }, 1000)
+})
+```
+
+Meanwhile let's add some transition:
+
+```html
+<style>
+  .hello {
+    text-align: center;
+  }
+
+  .content {
+    text-align: center;
+    animation: fade-in 1.5s;
+  }
+
+  @keyframes fade-in {
+    0% {opacity: 0;}
+    40% {opacity: 0;}
+    100% {opacity: 1;}
+  }
+
+  @-webkit-keyframes fade-in {
+    0% {opacity: 0;}
+    40% {opacity: 0;}
+    100% {opacity: 1;}
+  }
+</style>
 ```
 
 ## Example
 
-If you don't want any set up, just use a script tag to import `amber-dom` from `node_modules/amber-dom/dist/amberdom-browser.js`. An example of a ticking clock is below:
+An example of a ticking clock is below. Just copy and save it to `index.html` on your current root directory, and then open it in your browser.
 
 ```html
 <html>
   <body>
-    <script src="node_modules/amber-dom/dist/amberdom.browser.js"></script>
+    <script src="https://unpkg.com/amber-dom/dist/amberdom.min.js"></script>
     <script>
-      window.onload = () => {
-        const { h, diff, patch } = amberdom
-        const state = {                         // set up some UI state.
-          time: new Date().toLocaleTimeString()
-        }
+      const { h, diff, patch } = amberdom
+      const state = { // set up some UI state.
+        time: new Date().toLocaleTimeString()
+      }
 
-        let appVTree = h('div#app',             // create a virtual dom tree
+      const Clock = function(time) { // define a custom node.
+        return h('div#app',          // h function returns a vtree.
           h('h1', 'Hello amber-dom!'),
-          h('h2', 'It is ', state.time)
+          h('h2', 'It is ', time)
         )
-        let appDTree = appVTree.render()        // render to a real dom tree
+      }
 
-        function updater() {
-          let timer
+      const clockComponent = {   // define a singleton component.
+        tree: Clock(state.time), // current virtual tree
+        rootNode: null,          // root of rendered DOM tree
+        parentNode: null,        // parent of the rendered DOM tree
+        _timer: null,
 
-          updateTime()
+        mount: function(parentNode) {        // once mount is called, UI state updates itself.
+          this.rootNode = this.tree.render() // render to dom vtree
+          this.parentNode = parentNode
+          parentNode.appendChild(this.rootNode)
 
-          function updateTime() {
-            clearTimeout(timer)
+          const updater = () => {
+            clearTimeout(this._timer)
             state.time = new Date().toLocaleTimeString()
 
-            let newVTree = h('div#app',
-              h('h1', 'Hello amber-dom!'),
-              h('h2', 'It is ', state.time)
-            )
-            let patches = diff(appVTree, newVTree) // diff
+            const tree = Clock(state.time)        // a new vtree
+            const patches = diff(this.tree, tree) // diff
 
-            appVTree = newVTree
-            patch(appDTree, patches)               // patch
-            timer = setTimeout(updateTime, 1000)
+            patch(this.rootNode, patches)         // patch
+            this.tree = tree
+            this._timer = setTimeout(updater, 1000)
           }
-        }
+          updater()
+        },
 
-        document.body.appendChild(appDTree)     // append to body
-        updater()                               // set up updater
-      };
+        unmount: function() {
+          clearTimeout(this._timer)
+          this.parentNode.removeChild(this.rootNode)
+          return this.tree
+        }
+      }
+
+      window.onload = () => { clockComponent.mount(document.body) }
     </script>
   </body>
 </html>
 ```
 
-Just copy it and save it to `index.html` on your current root directory, and then open it in your browser. Press `F12`, you should see `amber-dom` updates only what's necessary:
+Press `F12`, you should see `amber-dom` updates only what's necessary.
 
-![](ticking-example.gif)
+You can umount the `clockComponent` on console by doing:
 
-To see tests on `amber-dom`, run:
+```js
+clockComponent.unmount()
+```
+
+Click [here](ticking-example.gif) to see the demo.
+
+## Test
 
 ```bash
-cd node_modules/amber-dom
+git clone git@github.com:Alieeeeen/amber-dom.git
+
+cd amber-dom
+
+npm install
 
 npm run dev
 ```
-Then visit `http://localhost:8080`, you'll see tests.
 
 ## Documentation
 
 It is recommanded to read the docs in the following order.
 
-1. For details of creating a virtual dom tree, see [docs/creatingVTree](docs/creatingVTree.md).
+1. For details of creating a virtual tree, see [docs/creatingVTree](docs/creatingVTree.md).
 2. For details of `diff`, see [docs/diff](docs/diff.md).
 3. For details of `patch`, see [docs/patch](docs/patch.md).
 

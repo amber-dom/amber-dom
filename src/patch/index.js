@@ -14,13 +14,9 @@ function patch(domRoot, patches) {
 // `walk` updates the domTree buttom-up.
 function walk(domNode, patches, walker) {
   const currPatches = patches[walker.index];
-  let   skipChildren = false; // Is it a REPLACE patch?
+  let   skipChildren = false;   // If it is a REPLACE patch, do not walk it.
 
   // changes should be applied for this node first
-  // in case one of childNodes of `domNode` is removed.
-  // Thus if patches are applied to childNodes first,
-  // and if that patched child node is later on removed,
-  // no effect will be taken into account.
   if(currPatches) {
     skipChildren = applyPatches(domNode, currPatches);
   }
@@ -37,30 +33,27 @@ function walk(domNode, patches, walker) {
   }
 }
 
-/**
- * patch a single dom node.
- * @param {NodeList} domNode 
- * @param {Array} patch
- * @returns {Boolean} whether to patch children or not. 
- */
+
 function applyPatches(domNode, patches) {
   let props, newNode, _events, skipChildren = false;
 
   patches.forEach(patch => {
     switch(patch.type) {
+    // FIXME: might be buggy.
     case REPLACE:
       newNode = (patch.node instanceof VNode || patch.node.render)
-        ? patch.node.render() // an instance of VNode or a custom node.
+        ? patch.node.render()
         : typeof patch.node === 'string'
         ? document.createTextNode(patch.node)
-        : new Error('You might be using a custom-defined node, if so, you need to provide a render function.');
+        : new Error('You might be using a custom-defined node extended from VNode, if so, provide a render function.');
       
       if (newNode instanceof Error) {
         throw newNode;
       }
-      patch.oldNode.detachEventListeners(); // avoid memory leaking.
+
+      patch.oldNode.detachEventListeners();
       domNode.parentNode.replaceChild(newNode, domNode);
-      skipChildren = true;   // there'll be no more patches.
+      skipChildren = true;
       break;
 
     case PROPS:
@@ -96,7 +89,7 @@ function applyPatches(domNode, patches) {
       throw new Error('Some internal error.');
     }
   });
-  // do not skip children.
+
   return skipChildren;
 }
 
@@ -112,7 +105,7 @@ function reorderChildren(domNode, moves) {
         node = move.node.render();
         domNode.insertBefore(node, childNodes[move.index]);
       } catch (e) {
-        console.log('A custom-defined node should have a render method, otherwise it must be defined as a function.');
+        console.log('You might be using a custom-defined node extended from VNode, if so, provide a render function.');
       }
       break;
 

@@ -115,17 +115,17 @@ describe('h Module', () => {
         expect(on).to.be(true);
     });
 
-    it('Custom-defined stateless node', () => {
-      function Block(props, header, body, footer) {
+    it('Custom-defined stateless node without props.', () => {
+      function Block(header, body, footer) {
         return (
-          h('div#block-wrapper.box', props,
+          h('div#block-wrapper.box',
             h('div.header', header),
             h('div.content', body),
             h('div.footer', footer)
           ));
       }
 
-      const block = h(Block, null, 'Title', 'Article1', 'Footer');
+      const block = h(Block, 'Title', 'Article1', 'Footer');
       const blockElem = block.render();
 
       // root
@@ -149,12 +149,11 @@ describe('h Module', () => {
 
     it('Cutom-defined node with state', () => {
       class Block extends VNode {
-        constructor(props, header, body, footer) {
-          super('', {}, []);
+        constructor(header, body, footer) {
+          super();
           this.header = header;
           this.body = body;
           this.footer = footer;
-          this.props = props;
 
           this.vtree = this.initVTree();
         }
@@ -163,7 +162,7 @@ describe('h Module', () => {
 
         initVTree() {
           return (
-            h('div#block-wrapper.box', this.props,
+            h('div#block-wrapper.box',
               h('div.header', this.header),
               h('div.content', this.body),
               h('div.footer', this.footer)
@@ -175,7 +174,7 @@ describe('h Module', () => {
         }
       }
 
-      const block = h(Block, null, 'Title', 'Article1', 'Footer');
+      const block = h(Block, 'Title', 'Article1', 'Footer');
       const blockElem = block.render();
 
       // root

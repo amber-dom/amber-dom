@@ -178,7 +178,7 @@ cd amber-dom
 
 npm install
 
-npm run dev
+npm test
 ```
 
 ## Documentation

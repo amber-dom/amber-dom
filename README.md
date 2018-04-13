@@ -1,5 +1,7 @@
 # <center>amber-dom</center>
 
+[![Build Status](https://www.travis-ci.org/Alieeeeen/amber-dom.svg?branch=master)](https://www.travis-ci.org/Alieeeeen/amber-dom)
+
 **amber-dom** is yet another lightweight virtual-dom library.
 
 ## Features

@@ -1,9 +1,9 @@
 import patchType from './patch-type';
-export default diff;
+export default listDiff;
 
 
 const { REPLACE, REORDER, TEXT, PROPS } = patchType;
-function diff(oldList, newList, key) {
+function listDiff(oldList, newList, key) {
   const oldListKeys = getKeys(oldList, key);
   const newListKeys = getKeys(newList, key);
   const oldListLength = oldList.length;

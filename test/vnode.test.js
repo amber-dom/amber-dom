@@ -1,7 +1,3 @@
-(function(){
-
-const { VNode } = amberdom;
-
 describe('VNode', () => {
   describe('#constructor', () => {
 
@@ -11,8 +7,8 @@ describe('VNode', () => {
         className: 'content main'
       }, []);
     
-      expect(div.props.className).to.be('content main');
-      expect(div.props.id).to.be('app');
+      expect(div.props.className).to.equal('content main');
+      expect(div.props.id).to.equal('app');
     });
 
     it('`style` as a string', () => {
@@ -21,8 +17,8 @@ describe('VNode', () => {
       }, []);
 
       const divElem = div.render()
-      expect(divElem.style.color).to.be('red');
-      expect(divElem.style.display).to.be('block');
+      expect(divElem.style.color).to.equal('red');
+      expect(divElem.style.display).to.equal('block');
     });
 
     it('`style` as an object will not work', () => {
@@ -48,7 +44,7 @@ describe('VNode', () => {
         happened = true;
       }
 
-      expect(happened).to.be(true);
+      expect(happened).to.equal(true);
     })
 
     it('Nested structure should work fine.', () => {
@@ -64,11 +60,11 @@ describe('VNode', () => {
             ])
         ]);
 
-      expect(div.count).to.be(4);
-      expect(div.children[0].tagName).to.be('h1');
-      expect(div.children[0].children[0]).to.be('Hello ');
-      expect(div.children[0].children[1].tagName).to.be('span');
-      expect(div.children[0].children[1].children[0]).to.be('world!');
+      expect(div.count).to.equal(4);
+      expect(div.children[0].tagName).to.equal('h1');
+      expect(div.children[0].children[0]).to.equal('Hello ');
+      expect(div.children[0].children[1].tagName).to.equal('span');
+      expect(div.children[0].children[1].children[0]).to.equal('world!');
     });
   });
 
@@ -77,8 +73,7 @@ describe('VNode', () => {
       const div = new VNode('h1', { style: "color: red;" }, ['Hello world!']);
 
       var divElem = div.render();
-      expect(divElem.style.color).to.be('red')
+      expect(divElem.style.color).to.equal('red')
     })
   })
 })
-})()

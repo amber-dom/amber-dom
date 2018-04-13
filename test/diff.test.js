@@ -1,6 +1,3 @@
-(function() {
-const { h, diff, patch } = amberdom;
-
 describe('diff Module', () => {
   describe('#diff', () => {
     it('TEXT', () => {
@@ -8,7 +5,7 @@ describe('diff Module', () => {
       const v2 = h("div", 'Hi');
       let patches = diff(v1, v2);
       
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         1: [{ type: 'TEXT', text: 'Hi' }]
       });
     });
@@ -18,7 +15,7 @@ describe('diff Module', () => {
       const v2 = h('h1');
       let patches = diff(v1, v2);
 
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         0: [{ type: 'REPLACE', node: h("h1"), oldNode: v1 }]
       });
     });
@@ -28,7 +25,7 @@ describe('diff Module', () => {
       const v2 = h('div', h('div', 'Heading 1'), h('div', 'Heading 2'));
       let patches = diff(v1, v2);
 
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         1: [
           { type: 'REPLACE', node: h('div', 'Heading 1'), oldNode: h('h1', 'Heading 1') }
         ],
@@ -49,7 +46,7 @@ describe('diff Module', () => {
 
       let patches = diff(v1, v2);
 
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         0: [{
           type: 'REORDER',
           moves: [
@@ -77,9 +74,9 @@ describe('diff Module', () => {
 
       let patches = diff(v1, v2);
       // should be non.
-      expect(patches[0]).to.eql(void 0);
+      expect(patches[0]).to.deep.equal(void 0);
       patches = diff(v1, v3);
-      expect(patches[0]).to.eql([{
+      expect(patches[0]).to.deep.equal([{
         type: 'REORDER',
         moves: [
           { type: 'INSERT', index: 2, node: h('li', 'shshsh') }
@@ -87,7 +84,7 @@ describe('diff Module', () => {
       }]);
 
       patches = diff(v3, v2);
-      expect(patches[0]).to.eql([
+      expect(patches[0]).to.deep.equal([
         {
           type: 'REORDER',
           moves: [
@@ -102,7 +99,7 @@ describe('diff Module', () => {
       const v2 = h('div', 'hello world');
       let patches = diff(v1, v2);
 
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         // remove child 'span'
         0: [{ type: 'REORDER', moves: [{ type: 'REMOVE', index: 1, node: null }] }],
         // replace ' world' with 'hello world'.
@@ -115,7 +112,7 @@ describe('diff Module', () => {
       const v2 = h('div', { 'data-main': 'else' });
 
       let patches = diff(v1, v2);
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         0: [{ type: 'PROPS', props: { 'data-main': 'else' }, node: v1 }]
       });
     });
@@ -136,7 +133,7 @@ describe('diff Module', () => {
       });
 
       let patches = diff(v1, v2);
-      expect(patches).to.eql({
+      expect(patches).to.deep.equal({
         0: [
           {
             type: 'PROPS',
@@ -151,4 +148,3 @@ describe('diff Module', () => {
     });
   });
 });
-})()

@@ -1,8 +1,4 @@
-(function(){
-const { h, diff, patch } = amberdom;
-
-
-describe('patch Module', () => {
+describe('Patch Module', () => {
   describe('#patch', () => {
     it('TEXT', () => {
       const v1 = h('div', 'hello world');
@@ -12,7 +8,7 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
       
-      expect(v1Elem.textContent || v1Elem.nodeValue).to.be('this is another text');
+      expect(v1Elem.textContent || v1Elem.nodeValue).to.equal('this is another text');
       v1Elem = null;
     });
 
@@ -31,8 +27,8 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.childNodes[0].textContent).to.be('another stuff');
-      expect(v1Elem.childNodes[1].textContent).to.be('yet another stuff');
+      expect(v1Elem.childNodes[0].textContent).to.equal('another stuff');
+      expect(v1Elem.childNodes[1].textContent).to.equal('yet another stuff');
     });
 
     it('REORDER, list with keys', () => {
@@ -50,8 +46,8 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.childNodes[0].textContent).to.be('another stuff');
-      expect(v1Elem.childNodes[1].textContent).to.be('yet another stuff');
+      expect(v1Elem.childNodes[0].textContent).to.equal('another stuff');
+      expect(v1Elem.childNodes[1].textContent).to.equal('yet another stuff');
     });
 
     it('PROPS', () => {
@@ -74,8 +70,8 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.getAttribute('class')).to.be('main');
-      expect(v1Elem.style.color).to.be('black')
+      expect(v1Elem.getAttribute('class')).to.equal('main');
+      expect(v1Elem.style.color).to.equal('black')
     });
 
     it('PROPS 2', () => {
@@ -87,8 +83,8 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.getAttribute('class')).to.be(' content');
-      expect(v1Elem.textContent).to.be('This is another content');
+      expect(v1Elem.getAttribute('class')).to.equal(' content');
+      expect(v1Elem.textContent).to.equal('This is another content');
     });
 
     it('PROPS, when event handler changes, the previously handler will be detached.', () => {
@@ -112,7 +108,7 @@ describe('patch Module', () => {
 
       // handler1 will not be invoked.
       butt1Elem.dispatchEvent(clickEvent);
-      expect(message).to.eql(['handler2 was invoked.']);
+      expect(message).to.deep.equal(['handler2 was invoked.']);
     });
 
     it('REPLACE', () => {
@@ -122,10 +118,10 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.childNodes[0].tagName).to.be('DIV');
-      expect(v1Elem.childNodes[0].textContent).to.be('Heading 1');
-      expect(v1Elem.childNodes[1].tagName).to.be('DIV');
-      expect(v1Elem.childNodes[1].textContent).to.be('Heading 2');
+      expect(v1Elem.childNodes[0].tagName).to.equal('DIV');
+      expect(v1Elem.childNodes[0].textContent).to.equal('Heading 1');
+      expect(v1Elem.childNodes[1].tagName).to.equal('DIV');
+      expect(v1Elem.childNodes[1].textContent).to.equal('Heading 2');
     });
 
     it('REPLACE a pretty deep node', () => {
@@ -136,9 +132,8 @@ describe('patch Module', () => {
       let v1Elem = v1.render();
       patch(v1Elem, patches);
 
-      expect(v1Elem.childNodes[0].tagName).to.be('P');
-      expect(v1Elem.childNodes[1].tagName).to.be('P');
+      expect(v1Elem.childNodes[0].tagName).to.equal('P');
+      expect(v1Elem.childNodes[1].tagName).to.equal('P');
     });
   });
 });
-})();

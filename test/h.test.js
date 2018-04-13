@@ -1,6 +1,3 @@
-(function() {
-const { h, VNode } = amberdom;
-
 describe('h Module', () => {
   describe('#h', () => {
     it('`className` as an array', () => {
@@ -12,9 +9,9 @@ describe('h Module', () => {
 
       const divElem = div.render();
 
-      expect(divElem.tagName).to.be('DIV');
-      expect(divElem.className).to.be('content main');
-      expect(divElem.id).to.be('app');
+      expect(divElem.tagName).to.equal('DIV');
+      expect(divElem.className).to.equal('content main');
+      expect(divElem.id).to.equal('app');
     });
 
     it('`className` as a string', () => {
@@ -24,8 +21,8 @@ describe('h Module', () => {
       });
     
       const divElem = div.render();
-      expect(div.props.className).to.be('content main');
-      expect(div.props.id).to.be('app');
+      expect(div.props.className).to.equal('content main');
+      expect(div.props.id).to.equal('app');
     });
 
     it('`style` as an object', () => {
@@ -37,21 +34,21 @@ describe('h Module', () => {
       });
 
       const divElem = div.render();
-      expect(divElem.style.color).to.be('red');
-      expect(divElem.style.display).to.be('block');
+      expect(divElem.style.color).to.equal('red');
+      expect(divElem.style.display).to.equal('block');
     });
 
     it('h("div") is fine.', () => {
       const div = h('div');
 
-      expect(div.children).to.eql([]);
+      expect(div.children).to.deep.equal([]);
     });
 
     it('h("div", "Hello") is fine', () => {
       const div = h("div", "Hello");
       const divElem = div.render();
 
-      expect(divElem.textContent).to.be("Hello");
+      expect(divElem.textContent).to.equal("Hello");
     });
 
     it('Multiple children', () => {
@@ -59,16 +56,16 @@ describe('h Module', () => {
         "span", {}, "Hello"), "world");
 
       const divElem = div.render();
-      expect(divElem.style.color).to.be('red');
-      expect(divElem.children[0].tagName).to.be('SPAN');
-      expect(divElem.children[0].textContent).to.be('Hello');
+      expect(divElem.style.color).to.equal('red');
+      expect(divElem.children[0].tagName).to.equal('SPAN');
+      expect(divElem.children[0].textContent).to.equal('Hello');
     });
 
     it('Multiple text children', () => {
       const div = h("div", "hello", " world");
       const divElem = div.render();
 
-      expect(divElem.textContent).to.be("hello world");
+      expect(divElem.textContent).to.equal("hello world");
     });
 
     it('Add event listeners.', () => {
@@ -89,7 +86,7 @@ describe('h Module', () => {
       const event = new Event('click');
 
       buttonElem.dispatchEvent(event);
-      expect(wasClicked).to.be(true);
+      expect(wasClicked).to.equal(true);
     });
 
     it('Detach event listeners.', () => {
@@ -107,12 +104,12 @@ describe('h Module', () => {
       const buttonElem = button.render();
       const event = new Event('click');
       buttonElem.dispatchEvent(event);
-      expect(on).to.be(true);
+      expect(on).to.equal(true);
 
       let i = 2;
       while(i--)
         buttonElem.dispatchEvent(event);
-        expect(on).to.be(true);
+        expect(on).to.equal(true);
     });
 
     it('Custom-defined stateless node without props.', () => {
@@ -129,22 +126,22 @@ describe('h Module', () => {
       const blockElem = block.render();
 
       // root
-      expect(blockElem.tagName).to.be('DIV');
-      expect(blockElem.id).to.be('block-wrapper');
-      expect(blockElem.className).to.be(' box');
+      expect(blockElem.tagName).to.equal('DIV');
+      expect(blockElem.id).to.equal('block-wrapper');
+      expect(blockElem.className).to.equal(' box');
 
       // child 1
-      expect(blockElem.childNodes[0].tagName).to.be('DIV');
-      expect(blockElem.childNodes[0].className).to.be(' header');
-      expect(blockElem.childNodes[0].textContent).to.be('Title');
+      expect(blockElem.childNodes[0].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[0].className).to.equal(' header');
+      expect(blockElem.childNodes[0].textContent).to.equal('Title');
 
-      expect(blockElem.childNodes[1].tagName).to.be('DIV');
-      expect(blockElem.childNodes[1].className).to.be(' content');
-      expect(blockElem.childNodes[1].textContent).to.be('Article1');
+      expect(blockElem.childNodes[1].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[1].className).to.equal(' content');
+      expect(blockElem.childNodes[1].textContent).to.equal('Article1');
       
-      expect(blockElem.childNodes[2].tagName).to.be('DIV');
-      expect(blockElem.childNodes[2].className).to.be(' footer');
-      expect(blockElem.childNodes[2].textContent).to.be('Footer');
+      expect(blockElem.childNodes[2].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[2].className).to.equal(' footer');
+      expect(blockElem.childNodes[2].textContent).to.equal('Footer');
     });
 
     it('Cutom-defined node with state', () => {
@@ -178,23 +175,22 @@ describe('h Module', () => {
       const blockElem = block.render();
 
       // root
-      expect(blockElem.tagName).to.be('DIV');
-      expect(blockElem.id).to.be('block-wrapper');
-      expect(blockElem.className).to.be(' box');
+      expect(blockElem.tagName).to.equal('DIV');
+      expect(blockElem.id).to.equal('block-wrapper');
+      expect(blockElem.className).to.equal(' box');
 
       // child 1
-      expect(blockElem.childNodes[0].tagName).to.be('DIV');
-      expect(blockElem.childNodes[0].className).to.be(' header');
-      expect(blockElem.childNodes[0].textContent).to.be('Title');
+      expect(blockElem.childNodes[0].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[0].className).to.equal(' header');
+      expect(blockElem.childNodes[0].textContent).to.equal('Title');
 
-      expect(blockElem.childNodes[1].tagName).to.be('DIV');
-      expect(blockElem.childNodes[1].className).to.be(' content');
-      expect(blockElem.childNodes[1].textContent).to.be('Article1');
+      expect(blockElem.childNodes[1].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[1].className).to.equal(' content');
+      expect(blockElem.childNodes[1].textContent).to.equal('Article1');
       
-      expect(blockElem.childNodes[2].tagName).to.be('DIV');
-      expect(blockElem.childNodes[2].className).to.be(' footer');
-      expect(blockElem.childNodes[2].textContent).to.be('Footer');
+      expect(blockElem.childNodes[2].tagName).to.equal('DIV');
+      expect(blockElem.childNodes[2].className).to.equal(' footer');
+      expect(blockElem.childNodes[2].textContent).to.equal('Footer');
     });
   })
 });
-})()

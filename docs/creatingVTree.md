@@ -89,6 +89,16 @@ h('div', null, 'content') // ok
 
 Here are some special props:
 
+- **key**
+    Keys help amber-dom in reordering lists. Whenever you want to render a list, provide a unique key for each item. **But do not use indexes as keys**. Indexes as keys will only work if you only insert items. Example from React:
+
+```js
+const blog = h('ul',
+  posts.map(post => {
+    return h('li', { key: post.id }, post.title)
+  }))
+  ```
+
 - **events**
     Specify an event hook using `ev-*`:
 

@@ -1,6 +1,6 @@
 # <center>amber-dom</center>
 
-[![Build Status](https://www.travis-ci.org/Alieeeeen/amber-dom.svg?branch=master)](https://www.travis-ci.org/Alieeeeen/amber-dom)[![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
+[![Build Status](https://www.travis-ci.org/Alieeeeen/amber-dom.svg?branch=master)](https://www.travis-ci.org/Alieeeeen/amber-dom) [![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
 
 **amber-dom** is yet another lightweight virtual-dom library.
 

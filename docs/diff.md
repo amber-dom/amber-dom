@@ -1,6 +1,6 @@
 ## amber-dom/diff
 
-Diff module. Diffs 2 virtual trees in O(n) time. It is a matter of fact that everyone knows.
+Diff module. **amber-dom/diff** v0.0.x walks the vtree in DFS order.
 
 ### diff(oldVTree, newVTree)
 

@@ -80,8 +80,10 @@ function listDiff(oldList, newList, key) {
       }
 
       // If it is already in place, don't do anything.
-      if (newIndex === oldIndex)  return;
-
+      if (newIndex === oldIndex) {
+        newList[newIndex].$el = oldList[oldIndex].$el;
+        return;
+      }
       moves.push({
         type: 'MOVE',
         from: oldIndex, 

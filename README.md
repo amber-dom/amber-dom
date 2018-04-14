@@ -1,20 +1,19 @@
 # <center>amber-dom</center>
 
-[![Build Status](https://www.travis-ci.org/Alieeeeen/amber-dom.svg?branch=master)](https://www.travis-ci.org/Alieeeeen/amber-dom)
+[![Build Status](https://www.travis-ci.org/Alieeeeen/amber-dom.svg?branch=master)](https://www.travis-ci.org/Alieeeeen/amber-dom)[![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
 
 **amber-dom** is yet another lightweight virtual-dom library.
 
 ## Features
 
-- Lightweight & efficient
-- Simple & robust
+- Lightweight & simple
 - Build dom trees using **hyperscript** or **jsx**
 
 ## Why Another Virtual Dom Library?
 
-`amber-dom` started as a study project. It aims to give you a basic understanding of diffing algorithm of virtual dom. I hope that it can enlighten you in some way.
+`amber-dom` started as a study project. In fact, I've been exploring related projects and improving **amber-dom** continuously. I hope that it can enlighten you in some way.
 
-Existing virtual dom libraries might be much more sophisticated. You might get frustrated when reading their source code. `amber-dom` provides another option. Even if it is simple, it is robust.
+Existing virtual dom libraries might be much more sophisticated and flexible. You might get frustrated when reading their source code. `amber-dom` provides another option.
 
 Due to its simplicity, you'll use `amber-dom` easily if you're already familiar with [hyperscript](https://github.com/hyperhype/hyperscript). It doesn't matter if you're unfamiliar with it, you can either continue reading this README, or take a glance at [docs/creatingVTree](docs/creatingVTree).
 

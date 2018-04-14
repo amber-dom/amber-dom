@@ -1,6 +1,6 @@
 ## Create a VTree using `amberdom.h`
 
-`amberdom` provides an `h` function to create virtual dom trees, which is an instance of `VNode`:
+**amber-dom** provides an `h` function to create virtual dom trees, which is an instance of `VNode`:
 
 ### `h(selector, props, ...children)`
 

@@ -1,1 +1,0 @@
-const { VNode, h, diff, patch } = amberdom;

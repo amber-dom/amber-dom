@@ -37,5 +37,13 @@ class VNode {
     if (ns) {
       addNS(this, ns);
     }
+
+    // deal with hooks.
+    if (props.hooks) {
+      for (const name in props.hooks) {
+        this[name] = props.hooks[name];
+      }
+      delete props.hooks;
+    }
   }
 }

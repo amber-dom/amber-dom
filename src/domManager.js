@@ -160,6 +160,9 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
         }
       }
       
+      // you might be wondering why don't I compare the value before setting
+      // it. In fact, no comparison is needed because it won't cause the browser's
+      // repaint or reflow if the new value is the same as old one.
       for (let i in value) {
         element.style[i] = value[i];
       }
@@ -197,7 +200,7 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
     }
 
     else {
-      ns = isNameSpaced && !!(attrName = (attrName.match(xlinkRe))[1]);
+      ns = isNameSpaced && !!(attrName = (attrName.match(xlinkRe)));
       // set it as an attribute.
       if (value && ns) {
         element.setAttributeNS(XLINK_NS, attrName, value);

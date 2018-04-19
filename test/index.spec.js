@@ -1,1 +1,1 @@
-import './h.spec'
+import './amber-dom.spec'

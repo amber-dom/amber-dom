@@ -30,7 +30,7 @@ function parseSelector(selector) {
     }
   });
 
-  result.className && result.className.join(' ');
+  result.className && (result.className = result.className.join(' '));
   return result;
 }
 
@@ -47,7 +47,7 @@ function h(selector, props) {
   // Case 1: `selector` is a function.
   if (typeof selector === 'function') {
     // use `new` in case it is a class.
-    return new selector(Array.prototype.slice.call(arguments, 1));
+    return new selector(...Array.prototype.slice.call(arguments, 1));
   }
 
   let tagInfo, children = [], child;

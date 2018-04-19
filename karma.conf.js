@@ -40,8 +40,7 @@ module.exports = function(config) {
         output: {
           // To include inlined sourcemaps as data URIs
           sourcemap: true,
-          format: 'iife',
-          name: 'amberdom'
+          format: 'iife'
         },
         // To compile with babel using es2015 preset
         plugins: [

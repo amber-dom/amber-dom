@@ -20,7 +20,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/**/*.spec.js'
+      'test/index.spec.js'
     ],
 
 
@@ -32,7 +32,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/**/*.spec.js': ['rollup']
+      'test/index.spec.js': ['rollup']
     },
 
     rollupPreprocessor: {
@@ -40,7 +40,7 @@ module.exports = function(config) {
         output: {
           // To include inlined sourcemaps as data URIs
           sourcemap: true,
-          format: 'umd',
+          format: 'iife',
           name: 'amberdom'
         },
         // To compile with babel using es2015 preset
@@ -57,7 +57,6 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['mocha'],
-
 
     // web server port
     port: 9876,
@@ -78,7 +77,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['ChromeHeadless', 'ChromeHeadlessNoSandbox'],
+    browsers: ['Chrome', 'ChromeHeadless', 'ChromeHeadlessNoSandbox'],
 
     customLaunchers: {
       ChromeHeadlessNoSandbox: {

@@ -1,5 +1,5 @@
 import { eventHookRe, XLINK_NS, xlinkRe } from "./util";
-import { VNode } from './vnode';
+import VNode from './vnode';
 
 export default domManager;
 
@@ -18,7 +18,7 @@ const domManager = {
  * @param {Element} parentNode 
  * @param {Element} node 
  */
-function append(parentNode, node) {
+export function append(parentNode, node) {
   parentNode.appendChild(node);
 }
 
@@ -27,7 +27,7 @@ function append(parentNode, node) {
  * @param {Element} node 
  * @param {Element} domNode the reference node.
  */
-function insertBefore(parentNode, node, domNode) {
+export function insertBefore(parentNode, node, domNode) {
   parentNode.insertBefore(node, domNode);
 }
 
@@ -36,7 +36,7 @@ function insertBefore(parentNode, node, domNode) {
  * @param {Element} domNode 
  * @param {Element} node 
  */
-function replace(parentNode, node, domNode) {
+export function replace(parentNode, node, domNode) {
   if (node.parentNode === parentNode)
     parentNode.replaceChild(node, domNode);
   return domNode;
@@ -47,7 +47,7 @@ function replace(parentNode, node, domNode) {
  * @param {Element} parentNode 
  * @param {Element} node 
  */
-function remove(parentNode, node) {
+export function remove(parentNode, node) {
   if (node.parentNode === parentNode)
     parentNode.removeChild(node);
   return node;
@@ -57,7 +57,7 @@ function remove(parentNode, node) {
  * Get next sibling of node.
  * @param {Element} node
  */
-function nextSibling(node) {
+export function nextSibling(node) {
   if (node instanceof Element) {
     return node.nextSibling;
   }
@@ -68,7 +68,7 @@ function nextSibling(node) {
  * Create a DOM node represented by `vnode`
  * @param {String|Number|VNode} vnode 
  */
-function create(vnode) {
+export function create(vnode) {
   // create a text node if it is a string or a number.
   if (typeof vnode === 'string' || typeof vnode === 'number')
     return document.createTextNode(vnode);
@@ -120,6 +120,10 @@ function create(vnode) {
     element.appendChild(childElement);
   });
 
+  if (vnode.created) {
+    vnode.created(element);
+  }
+
   return element;
 }
 
@@ -129,7 +133,7 @@ function create(vnode) {
  * @param {String} attrName 
  * @param {String} value 
  */
-function setAttribute(element, attrName, value, isNameSpaced) {
+export function setAttribute(element, attrName, value, isNameSpaced) {
   let ns, oldValue;
 
   attrName = attrName === 'className' ? 'class' : attrName;
@@ -150,14 +154,14 @@ function setAttribute(element, attrName, value, isNameSpaced) {
     if (value && typeof value === 'object') {
       // set every old style field to empty.
       if (typeof oldValue !== 'string') {
-        for (let i in old) {
+        for (let i in oldValue) {
           if (!(i in value))
-            node.style[i] = '';
+            element.style[i] = '';
         }
       }
       
       for (let i in value) {
-        node.style[i] = value[i];
+        element.style[i] = value[i];
       }
     }
 

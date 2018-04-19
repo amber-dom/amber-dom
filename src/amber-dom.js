@@ -11,3 +11,8 @@ const amberdom = {
 };
 
 export default amberdom;
+
+export { default as h } from './h';
+export { default as patch } from './patch';
+export { default as VNode } from './vnode';
+export { create as createElement } from './domManager';

@@ -68,7 +68,7 @@ function isSameNode(element, vnode) {
  */
 function patchProps(element, vnode) {
   const attrs = vnode.props;
-  const old = element.$props;
+  let old = element.$props;
   const isSvg = !!element.ns;
 
   // if this dom node wasn't diffed before, or wasn't created

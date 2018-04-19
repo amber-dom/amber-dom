@@ -1,5 +1,66 @@
-describe('h Module', () => {
-  describe('#h', () => {
+import { h, createElement } from '../src/amber-dom'
+
+
+describe('amber-dom', () => {
+  describe('hyperscript', () => {
+    it('can create an empty element', () => {
+      const div = h('div')
+      const elem = createElement(div)
+
+      expect(elem.tagName).to.equal(div.tagName)
+      expect(elem.childNodes.length).to.equal(0)
+    })
+
+    it('can create an element with props', () => {
+      const div = h('div', {
+        style: {
+          'color': 'red',
+          'text-align': 'center'
+        },
+        id: 'myDiv',
+        className: ['content', 'main']
+      })
+      const elem = createElement(div)
+
+      expect(elem.style['color']).to.equal('red')
+      expect(elem.id).to.equal('myDiv')
+      expect(elem.className).to.equal('content main')
+    })
+
+    it('can create an element with children', () => {
+      const div = h('div', { id: 'stuff' },
+        h('h1', 'Hello amber-dom!'))
+      const elem = createElement(div)
+
+      expect(elem.childNodes[0].tagName).to.equal('H1')
+      expect(elem.childNodes[0].childNodes[0].nodeType).to.equal(3)
+      expect(elem.childNodes[0].childNodes[0].textContent).to.equal('Hello amber-dom!')
+    })
+
+    it('can create an element with array <bold>nested</bold> children', () => {
+      const div = h('div', {
+        id: 'div-with-nested-children'
+      }, [
+        h('h1', 'Child 1.'),
+        h('h2', 'Child 2'),
+        h('h3', 'Child 3'),
+
+        [
+          h('span', 'Nested child 4')
+        ]
+      ])
+
+      const elem = createElement(div)
+
+      let i = 0
+      expect(elem.childNodes[i++].tagName).to.equal('H1')
+      expect(elem.childNodes[i++].tagName).to.equal('H2')
+      expect(elem.childNodes[i++].tagName).to.equal('H3')
+      expect(elem.childNodes[i++].tagName).to.equal('SPAN')
+    })
+
+
+    /*
     it('`className` as an array', () => {
       const div = h('div', {
         id: 'app',
@@ -191,6 +252,6 @@ describe('h Module', () => {
       expect(blockElem.childNodes[2].tagName).to.equal('DIV');
       expect(blockElem.childNodes[2].className).to.equal(' footer');
       expect(blockElem.childNodes[2].textContent).to.equal('Footer');
-    });
+    });*/
   })
 });

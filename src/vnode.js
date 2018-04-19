@@ -27,25 +27,15 @@ class VNode {
    */
   constructor(tagName, props, children) {
     this.tagName = tagName.toUpperCase();
-    this.props = props;
+    this.props = props || {};
     this.children = children || [];
     this.key = props && props.key;
-    this.ns = (props && props.namespace) ||
-      svgRe.test(tagName) ? SVG_NS : void 0;
+    
+    let ns = (props && props.namespace) ||
+      (svgRe.test(tagName) ? SVG_NS : void 0);
 
-    if (this.ns) {
-      addNS(this, this.ns);
+    if (ns) {
+      addNS(this, ns);
     }
-
-    /*
-    amber-dom v1 changed the underlying algorithm. Thus this seems useless.
-
-    this.count = children && children.reduce((acc, child) => {
-      if (child instanceof VNode)
-        return child.count + acc + 1;
-      else
-        return acc + 1;
-    }, 0);
-    */
   }
 }

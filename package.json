@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup --config rollup.config.build.js",
-    "dev": "export NODE_ENV=development && karma start",
+    "dev": "export NODE_ENV=development && karma start --browsers Chrome",
     "test": "export NODE_ENV=production && karma start --browsers ChromeHeadlessNoSandbox"
   },
   "repository": {

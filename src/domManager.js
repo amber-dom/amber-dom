@@ -48,8 +48,16 @@ export function replace(parentNode, node, domNode) {
  * @param {Element} node 
  */
 export function remove(parentNode, node) {
-  if (node.parentNode === parentNode)
+  if (node.parentNode === parentNode) {
+    // Clean up event listeners.
+    const _listeners = node._listeners;
+    if (_listeners) {
+      for (const name in _listeners) {
+        node.removeEventListener(name, _listeners[name]);
+      }
+    }
     parentNode.removeChild(node);
+  }
   return node;
 }
 

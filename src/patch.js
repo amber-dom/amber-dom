@@ -28,8 +28,9 @@ function patch(domRoot, vRoot) {
  * Patch a DOM node with a vnode.
  * @param {Element|Text} element 
  * @param {VNode} vnode 
+ * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
-function patchElement(element, vnode) {
+function patchElement(element, vnode, same) {
   if (vnode == null || typeof vnode === 'boolean')
     vnode = '';
 
@@ -42,13 +43,14 @@ function patchElement(element, vnode) {
     if (oldText !== vnode)
       element.textContent = vnode;
   }
-
+  
   // 2. are the same node.
-  else if (isSameNode(element, vnode)) {
+  else if (same || isSameNode(element, vnode)) {
     patchProps(element, vnode);
     patchChildren(element, vnode);
   }
-  
+
+
   // 3. not the same node.
   else {
     let node = create(vnode);
@@ -128,14 +130,14 @@ function patchChildren(element, vnode) {
         elemToMove;
 
     if (oldLen === 1 && isSameNode(oldChildren[0], ch)) {
-      patchElement(oldChildren[0], ch);
+      patchElement(oldChildren[0], ch, true);
     }
 
     else {
       // Try to find a child node that match.
       for (let i = 1; i < oldLen; i++) {
         if (isSameNode(oldChildren[i], ch)) {
-          patchElement(oldChildren[i], ch);
+          patchElement(oldChildren[i], ch, true);
 
           elemToMove = oldChildren[i];
           break;
@@ -169,7 +171,7 @@ function patchChildren(element, vnode) {
       while(vStart <= vEnd && oldStartCh !== oldEndCh && 
         oldStartCh && vStartCh && isSameNode(oldStartCh, vStartCh)
       ) {
-        patchElement(oldStartCh, vStartCh);
+        patchElement(oldStartCh, vStartCh, true);
 
         oldStartCh = oldStartCh.nextSibling;
         vStartCh = vChildren[++vStart];
@@ -178,7 +180,7 @@ function patchChildren(element, vnode) {
       while(vStart <= vEnd && oldStartCh !== oldEndCh && 
         oldEndCh && vEndCh && isSameNode(oldEndCh, vEndCh)
       ) {
-        patchElement(oldEndCh, vEndCh);
+        patchElement(oldEndCh, vEndCh, true);
 
         oldEndCh = oldEndCh.previousSibling;
         vEndCh = vChildren[--vEnd];
@@ -189,7 +191,7 @@ function patchChildren(element, vnode) {
 
       // Reorder corner case 1.
       if (isSameNode(oldStartCh, vEndCh)) {
-        patchElement(oldStartCh, vEndCh);
+        patchElement(oldStartCh, vEndCh, true);
         elemToMove = oldStartCh;
         oldStartCh = oldStartCh.nextSibling;
         // place it right behind oldEndCh.
@@ -200,7 +202,7 @@ function patchChildren(element, vnode) {
 
       // Reorder corner case 2.
       else if (isSameNode(oldEndCh, vStartCh)) {
-        patchElement(oldEndCh, vStartCh);
+        patchElement(oldEndCh, vStartCh, true);
         elemToMove = oldEndCh;
         oldEndCh = oldEndCh.previousSibling;
         // place it right in front of oldStartCh.
@@ -209,7 +211,7 @@ function patchChildren(element, vnode) {
         vStartCh = vChildren[++vStart];
       }
 
-      // insert or move.
+      // insert or reorder.
       else {
         // try to find element in old list.
         if (keyedChildren == null) {
@@ -218,15 +220,14 @@ function patchChildren(element, vnode) {
         
         elemToMove = keyedChildren[vStartCh.key];
 
-        // create a new element
+        // not found. Create a new child.
         if (elemToMove == null) {
           elemToMove = create(vStartCh);
           // place it right in front of oldStartCh
           insertBefore(element, elemToMove, oldStartCh);
         }
-        // the element is in the map.
+        // found. Move it to its place.
         else {
-          elemToMove = oldChildren[idxInOld];
           patchElement(elemToMove, startChild);
           keyedChildren[elemToMove.key] = void 0;
           // place it right in front of oldStartCh
@@ -236,6 +237,7 @@ function patchChildren(element, vnode) {
       }
     }
 
+    // NOTE: The outer if might be unnecessary.
     // if oldStartCh is ahead of oldEndCh or is oldEndCh
     if (vStart <= vEnd || oldStartCh !== oldEndCh || oldStartCh === oldEndCh) {
       if (oldStartCh) {
@@ -249,7 +251,7 @@ function patchChildren(element, vnode) {
         }
 
         if (isSameNode(oldEndCh, vChildren[vEnd])) {
-          patchElement(oldEndCh, vChildren[vEnd]);
+          patchElement(oldEndCh, vChildren[vEnd], true);
           if (vStart === vEnd) {
             return;
           }

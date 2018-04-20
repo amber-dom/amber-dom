@@ -90,11 +90,11 @@ describe('amber-dom', () => {
       expect(vnode.children[1].tagName).to.equal('SPAN')
     })
 
-    it('can create a vnode with string as children', () => {
+    it('can create a vnode with strings as children', () => {
       const vnode = h('div', 'amber-dom', ' is awesome')
 
-      expect(vnode.children[0]).to.equal('amber-dom')
-      expect(vnode.children[1]).to.equal(' is awesome')
+      expect(vnode.children.length).to.equal(1)
+      expect(vnode.children[0]).to.equal('amber-dom is awesome')
     })
 
     it('can create a vnode with props & array nested children', () => {
@@ -137,9 +137,10 @@ describe('amber-dom', () => {
       expect(vnode.children[0]).to.equal('Awesome!')
     })
 
-    it('can accept "text" as selector, & returns a concat string', () => {
-      const vnode = h('text', 'amber-dom', 'is awesome')
+    it('can accept "text" as selector', () => {
+      const vnode = h('text', 'amber-dom', ' is awesome')
 
+      expect(typeof vnode).to.equal('string')
       expect(vnode).to.equal('amber-dom is awesome')
     })
   })

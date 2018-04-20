@@ -9,9 +9,9 @@ const domManager = {
   insertBefore,
   remove,
   replace,
-  nextSibling,
   create,
-  setAttribute
+  setAttribute,
+  emptyChildren
 };
 
 /**
@@ -51,17 +51,6 @@ export function remove(parentNode, node) {
   if (node.parentNode === parentNode)
     parentNode.removeChild(node);
   return node;
-}
-
-/**
- * Get next sibling of node.
- * @param {Element} node
- */
-export function nextSibling(node) {
-  if (node instanceof Element) {
-    return node.nextSibling;
-  }
-  return null;
 }
 
 /**
@@ -217,6 +206,7 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
 
 /**
  * Empty an element's children.
+ * Removing from the last child might cause less repaint and reflow.
  * @param {Element} element 
  */
 export function emptyChildren(element) {

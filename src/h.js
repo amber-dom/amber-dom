@@ -50,7 +50,7 @@ function h(selector, props) {
     return new selector(...Array.prototype.slice.call(arguments, 1));
   }
 
-  let tagInfo, children = [], child;
+  let tagInfo, children = [], child, lastPrimitive = false;
 
   (props || (props = {}))
 
@@ -81,7 +81,14 @@ function h(selector, props) {
       child = typeof child === 'boolean' ? '' : child;
       child = typeof child === 'number' ? String(child) : child;
 
-      children.push(child);
+      if (lastPrimitive && typeof child === 'string') {
+        children[children.length - 1] += child;
+      }
+
+      else {
+        children.push(child);
+        lastPrimitive = typeof child === 'string' ? true : false;
+      }
     }
   }
 
@@ -89,7 +96,7 @@ function h(selector, props) {
   if (selector === 'text') {
     return children.length === 0
       ? ''
-      : children.join(' ');
+      : children.join('');
   }
 
   // Case 3: `selector` is a selector.

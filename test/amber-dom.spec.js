@@ -1,10 +1,20 @@
 import { h, createElement, patch } from '../src/amber-dom'
 
 
+/** Use for testing patching. Assume no dupplicate item. */
+function renderWithKeys(list) {
+  return h('ul', [ list.map(item => h('li', { key: item }, item)) ])
+}
+
+function renderWithoutKeys(list) {
+  return h('ul', [ list.map(item => h('li', item)) ])
+}
+
 /**
  * This file tests the basic usage of amber-dom.
  */
 describe('amber-dom', () => {
+
   describe('hyperscript', () => {
     it('can create vnode with element tag', () => {
       expect(h('div').tagName).to.equal('DIV')
@@ -130,7 +140,6 @@ describe('amber-dom', () => {
     })
   })
 
-
   describe('createElement', () => {
     it('create an empty element', () => {
       const elem = createElement(h('div'))
@@ -192,6 +201,276 @@ describe('amber-dom', () => {
       let elem = createElement(h('text', 'I am a text node'))
 
       expect(elem.nodeType).to.equal(Node.TEXT_NODE)
+    })
+  })
+
+  describe('patch', () => {
+
+    describe('patch text children', () => {
+      it('patch simple texts', () => {
+        function render(props) {
+          return h('div', 'Hello', props.message1, props.message2)
+        }
+
+        const elem = createElement(render({ message1: ' amber-dom', message2: '!' }))
+        expect(elem.textContent).to.equal('Hello amber-dom!')
+        patch(elem, render({ message1: ' virtual dom', message2: ' amber-dom' }))
+
+        expect(elem.textContent).to.equal('Hello virtual dom amber-dom')
+      })
+
+      it('patch texts with insertions', () => {
+        function render(props) {
+          return h('div', props.m1, props.m2, props.m3)
+        }
+
+        const elem = createElement(render({ m1: 'Hello ', m2: 'amber', m3: '' }))
+        patch(elem, render({ m1: 'Hello ', m2: 'amber', m3: '-dom' }))
+        expect(elem.textContent).to.equal('Hello amber-dom')
+      })
+
+      it('patch texts with removals', () => {
+        function render(props) {
+          return h('div', props.m1, props.m2, props.m3)
+        }
+
+        const elem = createElement(render({ m1: 'Hello ', m2: 'amber', m3: '-dom' }))
+        patch(elem, render({ m1: 'Hello ', m2: 'amber', m3: '' }))
+        expect(elem.textContent).to.equal('Hello amber')
+      })
+    })
+
+    describe('patch element children', () => {
+
+      
+      it('patch different child elements', () => {
+        let vnode = h('div', [h('span')])
+        let elem = createElement(vnode)
+
+        vnode = h('div', [h('p')])
+        patch(elem, vnode)
+        expect(elem.childNodes[0].tagName).to.equal('P')
+      })
+
+      it('patch child elements with appends', () => {
+        let vnode = renderWithKeys(['JavaScript', 'HTML', 'CSS'])
+        let elem = createElement(vnode)
+
+        // With keys set. Assume no duplicate items.
+        patch(elem, renderWithKeys(['JavaScript', 'HTML', 'CSS', 'amber-dom', 'virtual dom']))
+        expect(elem.childNodes.length).to.equal(5)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.childNodes[2].textContent).to.equal('CSS')
+        expect(elem.childNodes[3].textContent).to.equal('amber-dom')
+        expect(elem.lastChild.textContent).to.equal('virtual dom')
+
+        // Without keys set.
+        vnode = renderWithoutKeys(['JavaScript', 'HTML', 'CSS'])
+        elem = createElement(vnode)
+        patch(elem, renderWithoutKeys(['JavaScript', 'HTML', 'CSS', 'amber-dom', 'virtual dom']))
+        expect(elem.childNodes.length).to.equal(5)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.childNodes[2].textContent).to.equal('CSS')
+        expect(elem.childNodes[3].textContent).to.equal('amber-dom')
+        expect(elem.lastChild.textContent).to.equal('virtual dom')
+      })
+
+      it('patch child elements with insertions', () => {
+        let elem = createElement(renderWithKeys(['JavaScript', 'HTML', 'CSS']))
+
+        // With keys set.
+        patch(elem, renderWithKeys(['JavaScript', 'amber-dom', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.childNodes[2].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        patch(elem, renderWithKeys(['JavaScript', 'amber-dom', 'React', 'HTML', 'Preact', 'CSS']))
+        expect(elem.childNodes.length).to.equal(6)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.childNodes[2].textContent).to.equal('React')
+        expect(elem.childNodes[3].textContent).to.equal('HTML')
+        expect(elem.childNodes[4].textContent).to.equal('Preact')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        // Without keys.
+        elem = createElement(renderWithoutKeys(['JavaScript', 'HTML', 'CSS']))
+        patch(elem, renderWithoutKeys(['JavaScript', 'amber-dom', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.childNodes[2].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        patch(elem, renderWithoutKeys(['JavaScript', 'amber-dom', 'React', 'HTML', 'Preact', 'CSS']))
+        expect(elem.childNodes.length).to.equal(6)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.childNodes[2].textContent).to.equal('React')
+        expect(elem.childNodes[3].textContent).to.equal('HTML')
+        expect(elem.childNodes[4].textContent).to.equal('Preact')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+      })
+
+      it('patch child elements with removals', () => {
+        /**************
+         * With keys
+         ***************/
+        // Remove from the middle.
+        let elem = createElement(renderWithKeys(['JavaScript', 'amber-dom', 'React', 'Preact', 'HTML', 'CSS']))
+        patch(elem, renderWithKeys(['JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        // Remove from the back.
+        patch(elem, renderWithKeys(['JavaScript', 'HTML']))
+        expect(elem.childNodes.length).to.equal(2)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.lastChild.textContent).to.equal('HTML')
+
+        // Remove from the front.
+        patch(elem, renderWithKeys(['HTML']))
+        expect(elem.childNodes.length).to.equal(1)
+        expect(elem.firstChild.textContent).to.equal('HTML')
+
+        // Test corner case.
+        patch(elem, renderWithKeys([]))
+        expect(elem.childNodes.length).to.equal(0)
+
+
+        /*********************
+         * Without keys
+         **********************/
+        elem = createElement(renderWithoutKeys(['JavaScript', 'amber-dom', 'React', 'Preact', 'HTML', 'CSS']))
+        patch(elem, renderWithoutKeys(['JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        // Remove from the back.
+        patch(elem, renderWithoutKeys(['JavaScript', 'HTML']))
+        expect(elem.childNodes.length).to.equal(2)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.lastChild.textContent).to.equal('HTML')
+
+        // Remove from the front.
+        patch(elem, renderWithoutKeys(['HTML']))
+        expect(elem.childNodes.length).to.equal(1)
+        expect(elem.firstChild.textContent).to.equal('HTML')
+
+        // Test corner case.
+        patch(elem, renderWithoutKeys([]))
+        expect(elem.childNodes.length).to.equal(0)
+      })
+
+      it ('patch child elements with reorder', () => {
+        
+        /**********************
+         * With keys
+         ***********************/
+        let vnode = renderWithKeys(['JavaScript', 'HTML', 'CSS'])
+        let elem = createElement(vnode)
+        patch(elem, renderWithKeys(['JavaScript', 'CSS', 'HTML']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('CSS')
+        expect(elem.lastChild.textContent).to.equal('HTML')
+
+        patch(elem, renderWithKeys(['CSS', 'HTML', 'JavaScript']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('CSS')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('JavaScript')
+
+        /**********************
+         * Without keys.
+         ***********************/
+        vnode = renderWithoutKeys(['JavaScript', 'HTML', 'CSS'])
+        elem = createElement(vnode)
+        patch(elem, renderWithoutKeys(['JavaScript', 'CSS', 'HTML']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('CSS')
+        expect(elem.lastChild.textContent).to.equal('HTML')
+
+        patch(elem, renderWithoutKeys(['CSS', 'HTML', 'JavaScript']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('CSS')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('JavaScript')
+      })
+
+      it('patch child elements with insertions & removals', () => {
+        /*********************
+         * With keys
+         **********************/
+        let vnode = renderWithKeys(['JavaScript', 'HTML', 'CSS'])
+        let elem = createElement(vnode)
+
+        patch(elem, renderWithKeys(['HTML', 'amber-dom', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('HTML')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+        
+        patch(elem, renderWithKeys(['JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+
+        /***********************
+         * Without keys
+         ************************/
+        vnode = renderWithoutKeys(['JavaScript', 'HTML', 'CSS'])
+        elem = createElement(vnode)
+
+        patch(elem, renderWithoutKeys(['HTML', 'amber-dom', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('HTML')
+        expect(elem.childNodes[1].textContent).to.equal('amber-dom')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+        
+        patch(elem, renderWithoutKeys(['JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(3)
+        expect(elem.firstChild.textContent).to.equal('JavaScript')
+        expect(elem.childNodes[1].textContent).to.equal('HTML')
+        expect(elem.lastChild.textContent).to.equal('CSS')
+      })
+
+      it('patch child elements with reorders, insertions, & removals', () => {
+
+        /**********************
+         * With keys
+         ************************/
+        let elem = createElement(renderWithKeys(['Some stuff', 'Another stuff', 'Yet another stuff']))
+        patch(elem, renderWithKeys(['Another stuff', 'Real stuff', 'OK stuff', 'Yet another stuff']))
+
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('Another stuff')
+        expect(elem.childNodes[1].textContent).to.equal('Real stuff')
+        expect(elem.childNodes[2].textContent).to.equal('OK stuff')
+        expect(elem.lastChild.textContent).to.to.equal('Yet another stuff')
+
+        /**********************
+         * Without keys
+         ***********************/
+        elem = createElement(renderWithoutKeys(['Some stuff', 'Another stuff', 'Yet another stuff']))
+        patch(elem, renderWithoutKeys(['Another stuff', 'Real stuff', 'OK stuff', 'Yet another stuff']))
+
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('Another stuff')
+        expect(elem.childNodes[1].textContent).to.equal('Real stuff')
+        expect(elem.childNodes[2].textContent).to.equal('OK stuff')
+        expect(elem.lastChild.textContent).to.to.equal('Yet another stuff')
+      })
     })
   })
 })

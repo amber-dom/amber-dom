@@ -19,6 +19,24 @@ function addNS(vnode, ns) {
   }
 }
 
+/**
+ * Ensure all children have keys. If no key is provided,
+ * use index instead.
+ * @param {Array} children 
+ */
+function addChildKeys(children) {
+  let ch;
+
+  for (let i = 0, len = children.length; i < len; i++) {
+    ch = children[i];
+
+    if (ch instanceof VNode) {
+      ch.key = ch.props.key = ch.props.key != null
+        ? ch.props.key : i;
+    }
+  }
+}
+
 class VNode {
   /**
    * @param {String} tagName a tag name. Must be specified.
@@ -37,6 +55,8 @@ class VNode {
     if (ns) {
       addNS(this, ns);
     }
+
+    addChildKeys(this.children);
 
     // deal with hooks.
     if (props.hooks) {

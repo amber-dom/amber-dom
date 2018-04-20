@@ -37,7 +37,7 @@ export function insertBefore(parentNode, node, domNode) {
  * @param {Element} node 
  */
 export function replace(parentNode, node, domNode) {
-  if (node.parentNode === parentNode)
+  if (parentNode && node.parentNode === parentNode)
     parentNode.replaceChild(node, domNode);
   return domNode;
 }
@@ -104,7 +104,7 @@ export function create(vnode) {
     }
   }
 
-  children.forEach(child => {
+  children.forEach((child, i) => {
     let childElement;
 
     if (child instanceof VNode || typeof child === 'string') {
@@ -212,5 +212,21 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
         element.removeAttribute(attrName);
       }
     }
+  }
+}
+
+/**
+ * Empty an element's children.
+ * @param {Element} element 
+ */
+export function emptyChildren(element) {
+  if (element && element.childNodes && element.childNodes.length) {
+    let fc = element.firstChild, lc = element.lastChild;
+
+    while(fc !== lc) {
+      remove(element, lc);
+      lc = element.lastChild;
+    }
+    remove(element, fc);
   }
 }

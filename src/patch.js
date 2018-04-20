@@ -5,7 +5,9 @@ import {
   insertBefore,
   replace,
   create,
-  remove } from "./domManager";
+  remove,
+  append,
+  emptyChildren } from "./domManager";
 
 export default patch;
 
@@ -15,8 +17,10 @@ export default patch;
  * @param {VNode} vRoot 
  */
 function patch(domRoot, vRoot) {
-  if (domRoot instanceof Element || domRoot instanceof Text)
-    patchElement(domRoot, vRoot);
+  if (domRoot instanceof Element || domRoot instanceof Text) {
+    domRoot = patchElement(domRoot, vRoot);
+  }
+  return domRoot;
 }
 
 
@@ -47,8 +51,11 @@ function patchElement(element, vnode) {
   
   // 3. not the same node.
   else {
-    replace(element.parentNode, create(vnode), element);
+    let node = create(vnode);
+    replace(element.parentNode, node, element);
   }
+
+  return element;
 }
 
 /**
@@ -115,8 +122,30 @@ function patchChildren(element, vnode) {
     return;
   }
 
+  // Special case: if vnode contains only 1 child.
+  else if (vLen === 1) {
+    let ch = vChildren[0],
+        elemToMove;
+
+    // Try to find a child node that match.
+    for (let i = 0; i < oldLen; i++) {
+      if (isSameNode(oldChildren[i], ch)) {
+        patchElement(oldChildren[i], ch);
+
+        elemToMove = oldChildren[i];
+        break;
+      }
+    }
+    // If it wasn't found, create one from the vnode.
+    if (elemToMove === void 0) {
+      elemToMove = create(ch);
+    }
+    emptyChildren(element);
+    element.appendChild(elemToMove);
+  }
+
   // case 1: both have children.
-  else if (oldLen !== 0 && vLen !== 0) {
+  else if (oldLen !== 0 && vLen > 1) {
     let keyedChildren,
         vStart = 0,
         vEnd = vLen - 1,
@@ -130,14 +159,18 @@ function patchChildren(element, vnode) {
         elemToMove;
 
     while(vStart <= vEnd && oldStartCh !== oldEndCh) {
-      while(isSameNode(oldStartCh, vStartCh)) {
+      while(vStart <= vEnd && oldStartCh !== oldEndCh && 
+        oldStartCh && vStartCh && isSameNode(oldStartCh, vStartCh)
+      ) {
         patchElement(oldStartCh, vStartCh);
 
         oldStartCh = oldStartCh.nextSibling;
         vStartCh = vChildren[++vStart];
       }
 
-      while(isSameNode(oldEndCh, vEndCh)) {
+      while(vStart <= vEnd && oldStartCh !== oldEndCh && 
+        oldEndCh && vEndCh && isSameNode(oldEndCh, vEndCh)
+      ) {
         patchElement(oldEndCh, vEndCh);
 
         oldEndCh = oldEndCh.previousSibling;
@@ -145,9 +178,9 @@ function patchChildren(element, vnode) {
       }
 
       // in case there is no reordering, but just some insertions or removals.
-      if (oldStartCh === oldEndCh || vStart === vEnd)  break;
+      if (oldStartCh === oldEndCh || vStart >= vEnd)  break;
 
-      // move corner case 1.
+      // Reorder corner case 1.
       if (isSameNode(oldStartCh, vEndCh)) {
         patchElement(oldStartCh, vEndCh);
         elemToMove = oldStartCh;
@@ -158,13 +191,13 @@ function patchChildren(element, vnode) {
         vEndCh = vChildren[--vEnd];
       }
 
-      // move corner case 2.
+      // Reorder corner case 2.
       else if (isSameNode(oldEndCh, vStartCh)) {
         patchElement(oldEndCh, vStartCh);
         elemToMove = oldEndCh;
         oldEndCh = oldEndCh.previousSibling;
         // place it right in front of oldStartCh.
-        insertBefore(element, elemToMove, oldStartCh.previousSibling);
+        insertBefore(element, elemToMove, oldStartCh);
 
         vStartCh = vChildren[++vStart];
       }
@@ -196,18 +229,33 @@ function patchChildren(element, vnode) {
       }
     }
 
-    if (vStart <= vEnd || oldStartCh !== oldEndCh) {
-      // remove children.
-      if (oldStartCh !== oldEndCh) {
-        while(oldStartCh !== oldEndCh) {
-          remove(element, oldStartCh);
-          oldStartCh = oldStartCh.nextSibling;
-        }
-        remove(element, oldStartCh);
-      }
+    // if oldStartCh is ahead of oldEndCh or is oldEndCh
+    if (vStart <= vEnd || oldStartCh !== oldEndCh || oldStartCh === oldEndCh) {
+      if (oldStartCh) {
 
-      // insert children.
-      else {
+        // oldStartCh is ahead of oldEndCh, which means
+        // there are children to be removed.
+        while(oldStartCh !== oldEndCh) {
+          elemToMove = oldStartCh;
+          oldStartCh = oldStartCh.nextSibling;
+          remove(element, elemToMove);
+        }
+
+        if (isSameNode(oldEndCh, vChildren[vEnd])) {
+          patchElement(oldEndCh, vChildren[vEnd]);
+          if (vStart === vEnd) {
+            return;
+          }
+          vEnd--;
+        }
+
+        else {
+          elemToMove = oldEndCh;
+          oldEndCh = oldEndCh.nextSibling;
+          remove(element, elemToMove);
+        }
+
+        // append new children if there's any.
         for (let i = vStart; i <= vEnd; i++) {
           insertBefore(element, create(vChildren[i]), oldEndCh);
         }
@@ -217,18 +265,7 @@ function patchChildren(element, vnode) {
 
   // case 2: remove all DOM children.
   else if (oldLen !== 0) {
-    // To reduce reflow.
-    let oldCh = oldChildren.lastChild;
-    let fc = oldChildren.firstChild;
-
-    while(oldCh !== fc) {
-      remove(element, oldCh);
-      oldCh = oldCh.previousSibling;
-    }
-
-    if (oldCh === fc) {
-      remove(element, oldCh);
-    }
+    emptyChildren(element);
   }
 
   // case 3: insert new DOM children.

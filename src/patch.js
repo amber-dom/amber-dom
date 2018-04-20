@@ -127,21 +127,28 @@ function patchChildren(element, vnode) {
     let ch = vChildren[0],
         elemToMove;
 
-    // Try to find a child node that match.
-    for (let i = 0; i < oldLen; i++) {
-      if (isSameNode(oldChildren[i], ch)) {
-        patchElement(oldChildren[i], ch);
+    if (oldLen === 1 && isSameNode(oldChildren[0], ch)) {
+      patchElement(oldChildren[0], ch);
+    }
 
-        elemToMove = oldChildren[i];
-        break;
+    else {
+      // Try to find a child node that match.
+      for (let i = 1; i < oldLen; i++) {
+        if (isSameNode(oldChildren[i], ch)) {
+          patchElement(oldChildren[i], ch);
+
+          elemToMove = oldChildren[i];
+          break;
+        }
       }
+
+      // If it wasn't found, create one from the vnode.
+      if (elemToMove === void 0) {
+        elemToMove = create(ch);
+      }
+      emptyChildren(element);
+      element.appendChild(elemToMove);
     }
-    // If it wasn't found, create one from the vnode.
-    if (elemToMove === void 0) {
-      elemToMove = create(ch);
-    }
-    emptyChildren(element);
-    element.appendChild(elemToMove);
   }
 
   // case 1: both have children.

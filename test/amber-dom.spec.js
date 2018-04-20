@@ -10,6 +10,10 @@ function renderWithoutKeys(list) {
   return h('ul', [ list.map(item => h('li', item)) ])
 }
 
+function renderWithCustomKey(list) {
+  return h('ul', [ list.map(item => h('li', { key: item.key }, item.value)) ])
+}
+
 /**
  * This file tests the basic usage of amber-dom.
  */
@@ -240,9 +244,9 @@ describe('amber-dom', () => {
       })
     })
 
-    describe('patch element children', () => {
 
-      
+    describe('patch element children with and without keys', () => {
+
       it('patch different child elements', () => {
         let vnode = h('div', [h('span')])
         let elem = createElement(vnode)
@@ -470,6 +474,32 @@ describe('amber-dom', () => {
         expect(elem.childNodes[1].textContent).to.equal('Real stuff')
         expect(elem.childNodes[2].textContent).to.equal('OK stuff')
         expect(elem.lastChild.textContent).to.to.equal('Yet another stuff')
+      })
+    })
+
+
+    describe('patch element with keyed and unkeyed children', () => {
+      it('can deal with randomly set up data', () => {
+        const data1 = [
+          { key: 'appl', value: 'Apple'},
+          { key: 'pear', value: 'Pear' },
+          { value: 'Pineaple' }
+        ]
+
+        const data2 = [
+          { key: 'orange', value: 'Orange' },
+          { value: 'Peach' },
+          { key: 'something complex', value: 'Pineaple' },
+          { key: 'foo', value: 'bar' }
+        ]
+
+        let elem = createElement(renderWithCustomKey(data1))
+        patch(elem, renderWithCustomKey(data2))
+        expect(elem.childNodes.length).to.equal(4)
+
+        for (let i = 0; i < 4; i++) {
+          expect(elem.childNodes[i].textContent).to.equal(data2[i].value)
+        }
       })
     })
   })

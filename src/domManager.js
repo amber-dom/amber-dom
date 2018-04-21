@@ -37,9 +37,13 @@ export function insertBefore(parentNode, node, domNode) {
  * @param {Element} node 
  */
 export function replace(parentNode, node, domNode) {
-  if (parentNode && node.parentNode === parentNode)
+  if (parentNode && node.parentNode === parentNode) {
     parentNode.replaceChild(node, domNode);
-  return domNode;
+  }
+  else {
+    console.warn(`The element ${node.id ? node.tagName+'#'+node.id : node.tagName} wasn't mounted on document.`)
+  }
+  return node;
 }
 
 /**

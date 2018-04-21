@@ -54,7 +54,7 @@ function patchElement(element, vnode, same) {
   // 3. not the same node.
   else {
     let node = create(vnode);
-    replace(element.parentNode, node, element);
+    element = replace(element.parentNode, node, element);
   }
 
   return element;

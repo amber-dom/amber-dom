@@ -9,6 +9,9 @@ export default VNode;
 function addNS(vnode, ns) {
   const children = vnode.children;
   vnode.ns = ns;
+  // tag name needs to be converted back to lowercase.
+  vnode.tagName = vnode.tagName
+    ? vnode.tagName.toLocaleLowerCase() : void 0;
 
   for (let i = 0, len = children.length; i < len; i++) {
     let child = children[i];

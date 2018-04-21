@@ -197,7 +197,7 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
     }
 
     else {
-      ns = isNameSpaced && !!(attrName = (attrName.match(xlinkRe)));
+      ns = isNameSpaced && !!(attrName.match(xlinkRe));
       // set it as an attribute.
       if (value && ns) {
         element.setAttributeNS(XLINK_NS, attrName, value);

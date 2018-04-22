@@ -3,11 +3,10 @@ import { eventHookRe, isEmpty } from './util';
 import { 
   setAttribute,
   insertBefore,
-  replace,
   create,
   remove,
   append,
-  emptyChildren } from "./domManager";
+  emptyChildren } from "./dom-manager";
 
 export default patch;
 
@@ -31,6 +30,8 @@ function patch(domRoot, vRoot) {
  * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
 function patchElement(element, vnode, same) {
+  let i, hooks = element.$hooks;
+
   if (vnode == null || typeof vnode === 'boolean')
     vnode = '';
 
@@ -46,7 +47,17 @@ function patchElement(element, vnode, same) {
   
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
+    if (hooks && (i = hooks.beforeUpdate) && (typeof i === 'function')) {
+      if(i(element, vnode) === false)
+        return;
+    }
+
     patchProps(element, vnode);
+
+    if (hooks && (i = hooks.updated) && (typeof i === 'function')) {
+      i(element, vnode);
+    }
+
     patchChildren(element, vnode);
   }
 
@@ -54,7 +65,8 @@ function patchElement(element, vnode, same) {
   // 3. not the same node.
   else {
     let node = create(vnode);
-    element = replace(element.parentNode, node, element);
+    // replace the `element` with `node`.
+    element = remove(element.parentNode, element, node);
   }
 
   return element;
@@ -76,9 +88,9 @@ function isSameNode(element, vnode) {
  * @param {VNode} vnode 
  */
 function patchProps(element, vnode) {
-  const attrs = vnode.props;
-  let old = element.$props;
-  const isSvg = !!element.ns;
+  let attrs = vnode.props,
+      old = element.$props,
+      isSvg = !!element.ns;
 
   // if this dom node wasn't diffed before, or wasn't created
   // by `create`, pull out its attributes and patch them.

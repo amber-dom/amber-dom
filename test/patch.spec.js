@@ -1,4 +1,5 @@
-import { h, patch } from '../src/amber-dom'
+import h from '../src/h'
+import patch from '../src/patch'
 
 
 function render(props) {

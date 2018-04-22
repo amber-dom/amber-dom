@@ -1,0 +1,1 @@
+export { create as createElement } from './dom-manager';

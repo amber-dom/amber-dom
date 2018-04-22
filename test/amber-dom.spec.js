@@ -1,4 +1,6 @@
-import { h, createElement, patch } from '../src/amber-dom'
+import h from '../src/h'
+import { create as createElement } from '../src/dom-manager'
+import patch from '../src/patch'
 
 
 /** Use for testing patching. Assume no dupplicate item. */

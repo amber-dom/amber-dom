@@ -51,22 +51,25 @@ class VNode {
     this.props = props || {};
     this.children = children || [];
     this.key = props && props.key;
-    
-    let ns = (props && props.namespace) ||
-      (svgRe.test(tagName) ? SVG_NS : void 0);
 
+    let i,
+        ns = (props && props.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
+
+    // set up namespace.
     if (ns) {
       addNS(this, ns);
     }
 
+    // set up children's key.
     addChildKeys(this.children);
 
-    // deal with hooks.
+    // set up hooks.
     if (props.hooks) {
-      for (const name in props.hooks) {
-        this[name] = props.hooks[name];
-      }
+      this.hooks = i = props.hooks;
       delete props.hooks;
+      // if `vnode hook` is defined, invoke it with this vnode.
+      if ((i = i.vnode) || typeof i === 'function')
+        i(vnode);
     }
   }
 }

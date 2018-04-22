@@ -1,4 +1,6 @@
-import { h, patch, createElement } from '../src/amber-dom'
+import h from '../src/h'
+import { create as createElement } from '../src/dom-manager'
+import patch from '../src/patch'
 
 describe('event hooks', () => {
   it('can add a listener using "ev-*"', () => {

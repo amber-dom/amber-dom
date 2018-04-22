@@ -8,7 +8,6 @@ const domManager = {
   append,
   insertBefore,
   remove,
-  replace,
   create,
   setAttribute,
   emptyChildren
@@ -32,37 +31,37 @@ export function insertBefore(parentNode, node, domNode) {
 }
 
 /**
- * @param {Element} parentNode 
- * @param {Element} domNode 
- * @param {Element} node 
+ * Remove a child on a node if it exists.
+ * @param {Element} parentNode the parent of the node to be removed.
+ * @param {Element} domNode the node to be removed.
+ * @param {Element} node Optional replacement of `domNode`.
  */
-export function replace(parentNode, node, domNode) {
-  if (parentNode && node.parentNode === parentNode) {
-    parentNode.replaceChild(node, domNode);
+export function remove(parentNode, domNode, node) {
+  let i, res, hooks = domNode.$hooks;
+
+  if (parentNode && domNode.parentNode === parentNode) {
+    if (hooks && (i = hooks.beforeRemove) && (typeof i === 'function')) {
+      if (i(domNode) === false)
+        return;
+    }
+    
+    (node) && (parentNode.replaceChild(node, domNode)) && (res = node);
+    (parentNode.removeChild(domNode)) && (res = domNode);
+    
+    if (hooks && (i = hooks.removed) && (typeof i === 'function')) {
+      i(domNode);
+    }
   }
+
+  else if (domNode && node) {
+    res = node;
+  }
+
   else {
     console.warn(`The element ${node.id ? node.tagName+'#'+node.id : node.tagName} wasn't mounted on document.`)
   }
-  return node;
-}
-
-/**
- * Remove a child on a node if it exists.
- * @param {Element} parentNode 
- * @param {Element} node 
- */
-export function remove(parentNode, node) {
-  if (node.parentNode === parentNode) {
-    // Clean up event listeners.
-    const _listeners = node._listeners;
-    if (_listeners) {
-      for (const name in _listeners) {
-        node.removeEventListener(name, _listeners[name]);
-      }
-    }
-    parentNode.removeChild(node);
-  }
-  return node;
+  
+  return res;
 }
 
 /**
@@ -74,13 +73,15 @@ export function create(vnode) {
   if (typeof vnode === 'string' || typeof vnode === 'number')
     return document.createTextNode(vnode);
 
-  const tagName = vnode.tagName;
-  const props = vnode.props;
-  const children = vnode.children;
-  const ns = vnode.ns;
-  const element = ns
-    ? document.createElementNS(ns, tagName)
-    : document.createElement(tagName);
+  const tagName = vnode.tagName,
+        props = vnode.props,
+        children = vnode.children,
+        ns = vnode.ns,
+        element = ns
+          ? document.createElementNS(ns, tagName)
+          : document.createElement(tagName);
+
+  let i;
 
   // for next diff.
   element.$props = props;
@@ -96,7 +97,7 @@ export function create(vnode) {
       }
 
       // for next diff.
-      (element._listeners || (element._listeners = {}))[event[1]] = handler;
+      (element.$listeners || (element.$listeners = {}))[event[1]] = handler;
       element.addEventListener(event[1], handler, false);
     }
 
@@ -121,9 +122,12 @@ export function create(vnode) {
     element.appendChild(childElement);
   });
 
-  if (vnode.created) {
-    vnode.created(element);
+  // Invoke "created hooks"
+  if ((i = vnode.hooks) && (i = i.created) && (typeof i === 'function')) {
+    i(element);
   }
+  element.$hooks && (element.$hooks = vnode.hooks);
+  delete props.$hooks;
 
   return element;
 }
@@ -170,7 +174,7 @@ export function setAttribute(element, attrName, value, isNameSpaced) {
     }
 
     // for next diff.
-    element.$style = value ? value : '';
+    value && (element.$style = value);
 
     break;
   

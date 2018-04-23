@@ -42,10 +42,10 @@ function patchElement(element, vnode, same) {
   
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
-    patchAttrs(element, vnode.attrs);
+    patchAttrs(element, vnode);
     patchChildren(element, vnode);
     for (const name in vnode.modAttrs) {
-      modules[name].updating(vnode.modAttrs[name]);
+      modules[name].updating(element, vnode.modAttrs[name]);
     }
   }
 

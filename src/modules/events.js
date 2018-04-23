@@ -17,7 +17,7 @@ function addEventListeners(elem, events) {
     }
 
     // a listener with params.
-    else if (!!(value.shift) && (handler = value.shift()) && (typeof handler === 'function')) {
+    else if (value && !!(value.shift) && (handler = value.shift()) && (typeof handler === 'function')) {
       params = value;
     }
 

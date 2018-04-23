@@ -46,6 +46,7 @@ export function remove(parentNode, domNode, node) {
  * @param {String|Number|VNode} vnode 
  */
 export function create(vnode) {
+  if (vnode == null)  return null;
 
   if (typeof vnode === 'string')
     return document.createTextNode(vnode);
@@ -83,7 +84,7 @@ export function create(vnode) {
   });
 
   for (const name in modAttrs) {
-    modules[name].creating(modAttrs[name]);
+    modules[name].creating(elem, modAttrs[name]);
   }
 
   return elem;

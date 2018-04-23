@@ -1,5 +1,7 @@
-import { eventHookRe, svgRe, SVG_NS } from './util';
+import { svgRe, SVG_NS } from './util';
+import { modules } from './module-manager';
 export default VNode;
+
 
 /**
  * Add namespace for `vnode` and recursively add it to its children.
@@ -8,34 +10,13 @@ export default VNode;
  */
 function addNS(vnode, ns) {
   const children = vnode.children;
-  vnode.ns = ns;
-  // tag name needs to be converted back to lowercase.
-  vnode.tagName = vnode.tagName
-    ? vnode.tagName.toLocaleLowerCase() : void 0;
 
+  vnode.ns = ns;
   for (let i = 0, len = children.length; i < len; i++) {
     let child = children[i];
 
-    if (child instanceof VNode) {
+    if (child instanceof VNode && child.tagName !== 'foreignObject') {
       addNS(child, ns);
-    }
-  }
-}
-
-/**
- * Ensure all children have keys. If no key is provided,
- * use index instead.
- * @param {Array} children 
- */
-function addChildKeys(children) {
-  let ch;
-
-  for (let i = 0, len = children.length; i < len; i++) {
-    ch = children[i];
-
-    if (ch instanceof VNode) {
-      ch.key = ch.props.key = ch.props.key != null
-        ? ch.props.key : i;
     }
   }
 }
@@ -43,33 +24,31 @@ function addChildKeys(children) {
 class VNode {
   /**
    * @param {String} tagName a tag name. Must be specified.
-   * @param {Object|null} props can be an empty object.
+   * @param {Object|null} attrs attributes to set on DOM.
    * @param {Array|null} children can be an empty array.
    */
-  constructor(tagName, props, children) {
-    this.tagName = tagName.toUpperCase();
-    this.props = props || {};
-    this.children = children || [];
-    this.key = props && props.key;
+  constructor(tagName, attrs, children) {
+    (attrs || (attrs = {}));
+    (children || (children = []));
 
-    let i,
-        ns = (props && props.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
+    let ns = (attrs.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
+
+    this.tagName = !!ns ? tagName : tagName.toUpperCase();
+    this.attrs = {};
+    this.modAttrs = {};
+    this.key = attrs.key;
+    this.children = children;
+
+    // separate module-managed attrs and self-managed attrs.
+    for (let name in attrs) {
+      if (!(name in modules)) {
+        this.attrs[name] = attrs[name];
+      } else {
+        this.modAttrs[name] = attrs[name];
+      }
+    }
 
     // set up namespace.
-    if (ns) {
-      addNS(this, ns);
-    }
-
-    // set up children's key.
-    addChildKeys(this.children);
-
-    // set up hooks.
-    if (props.hooks) {
-      this.hooks = i = props.hooks;
-      delete props.hooks;
-      // if `vnode hook` is defined, invoke it with this vnode.
-      if ((i = i.vnode) || typeof i === 'function')
-        i(vnode);
-    }
+    ns && addNS(this, ns);
   }
 }

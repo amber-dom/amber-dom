@@ -31,31 +31,27 @@ describe('amber-dom', () => {
     it('can create vnode with CSS selector', () => {
       const vnode = h('div#hello.content.main')
       expect(vnode.tagName).to.equal('DIV')
-      expect(vnode.props.id).to.equal('hello')
-      expect(vnode.props.className).to.equal('content main')
+      expect(vnode.attrs.id).to.equal('hello')
+      expect(vnode.attrs.className).to.equal('content main')
     })
 
-    it('can create a vnode with props & a child', () => {
+    it('can create a vnode with attrs & a child', () => {
       const vnode = h('div', {
-        style: {
-          'color': 'red',
-          'text-align': 'center'
-        },
         id: 'myDiv',
         className: ['content', 'main']
       }, h('span#hello'))
 
-      // test props.
+      // test attrs.
       expect(vnode.tagName).to.equal('DIV')
-      expect(vnode.props.style['color']).to.equal('red')
-      expect(vnode.props.style['text-align']).to.equal('center')
+      expect(vnode.attrs.id).to.equal('myDiv')
+      expect(vnode.attrs.className).to.equal('content main')
 
       // test children
       expect(vnode.children[0].tagName).to.equal('SPAN')
-      expect(vnode.children[0].props.id).equal('hello')
+      expect(vnode.children[0].attrs.id).equal('hello')
     })
 
-    it('can create a vnode with props.className as a string or as an array', () => {
+    it('can create a vnode with attrs.className as a string or as an array', () => {
       const vnode1 = h('div', {
         className: 'content main'
       })
@@ -64,11 +60,11 @@ describe('amber-dom', () => {
         className: ['content', 'main']
       })
 
-      expect(vnode1.props.className).to.equal('content main')
-      expect(vnode2.props.className).to.equal('content main')
+      expect(vnode1.attrs.className).to.equal('content main')
+      expect(vnode2.attrs.className).to.equal('content main')
     })
 
-    it('can create a vnode with props & children', () => {
+    it('can create a vnode with attrs & children', () => {
       const vnode = h('div', { id: 'stuff' },
         h('h1', 'Hello amber-dom!'))
 
@@ -76,7 +72,7 @@ describe('amber-dom', () => {
       expect(vnode.children[0].children[0]).to.equal('Hello amber-dom!')
     })
 
-    it('can create a vnode with no props but children', () => {
+    it('can create a vnode with no attrs but children', () => {
       const vnode = h('div',
         h('span'),
         h('span'))
@@ -85,7 +81,7 @@ describe('amber-dom', () => {
       expect(vnode.children[1].tagName).to.equal('SPAN')
     })
 
-    it('can create a vnode with no props but nested children', () => {
+    it('can create a vnode with no attrs but nested children', () => {
       const vnode = h('div', [h('span'), h('span')])
 
       expect(vnode.children[0].tagName).to.equal('SPAN')
@@ -99,7 +95,7 @@ describe('amber-dom', () => {
       expect(vnode.children[0]).to.equal('amber-dom is awesome')
     })
 
-    it('can create a vnode with props & array nested children', () => {
+    it('can create a vnode with attrs & array nested children', () => {
       const vnode = h('div', {
         id: 'div-with-nested-children'
       },
@@ -121,21 +117,15 @@ describe('amber-dom', () => {
     })
 
     it('can accept a custom function as first argument', () => {
-      function CustomGenerator(props) {
-        return h('div', {
-          style: props.style
-        }, props.text)
+      function render(props) {
+        return h('div', props.text)
       }
 
-      const vnode = h(CustomGenerator, {
-        text: 'Awesome!',
-        style: {
-          'text-align': 'center'
-        }
+      const vnode = h(render, {
+        text: 'Awesome!'
       })
 
       expect(vnode.tagName).to.equal('DIV')
-      expect(vnode.props.style['text-align']).to.equal('center')
       expect(vnode.children[0]).to.equal('Awesome!')
     })
 
@@ -164,7 +154,7 @@ describe('amber-dom', () => {
       expect(elem.className).to.equal('content main')
     })
 
-    it('create an element with id & classes in props', () => {
+    it('create an element with id & classes in attrs', () => {
       const elem = createElement(h('i', {className: 'someclass secondclass'}))
 
       assert.isOk(elem.classList.contains('someclass'))
@@ -198,7 +188,7 @@ describe('amber-dom', () => {
       expect(elem.childNodes[1].textContent).to.equal('I am a string')
     })
 
-    it('create elements with props', () => {
+    it('create elements with attrs', () => {
       let elem = createElement(h('a', { src: 'http://example.com' }))
 
       expect(elem.getAttribute('src')).to.equal('http://example.com')

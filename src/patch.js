@@ -1,5 +1,5 @@
 import VNode from './vnode';
-import { eventHookRe, isEmpty } from './util';
+import { modules } from './module-manager';
 import { 
   setAttribute,
   insertBefore,
@@ -30,16 +30,11 @@ function patch(domRoot, vRoot) {
  * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
 function patchElement(element, vnode, same) {
-  let i, hooks = element.$hooks;
-
   if (vnode == null || typeof vnode === 'boolean')
     vnode = '';
 
   // 1. both text nodes.
-  if (
-    (element.nodeType === 3) &&
-    (typeof vnode === 'string' || typeof vnode === 'number')
-  ) {
+  if ((element.nodeType === 3) && (typeof vnode === 'string')) {
     const oldText = element.textContent || element.nodeValue;
     if (oldText !== vnode)
       element.textContent = vnode;
@@ -47,20 +42,12 @@ function patchElement(element, vnode, same) {
   
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
-    if (hooks && (i = hooks.beforeUpdate) && (typeof i === 'function')) {
-      if(i(element, vnode) === false)
-        return;
-    }
-
-    patchProps(element, vnode);
-
-    if (hooks && (i = hooks.updated) && (typeof i === 'function')) {
-      i(element, vnode);
-    }
-
+    patchAttrs(element, vnode.attrs);
     patchChildren(element, vnode);
+    for (const name in vnode.modAttrs) {
+      modules[name].updating(vnode.modAttrs[name]);
+    }
   }
-
 
   // 3. not the same node.
   else {
@@ -73,8 +60,7 @@ function patchElement(element, vnode, same) {
 }
 
 /**
- * See if 2 nodes are of the same type & have the same key.
- * Text nodes will do find because it will be patched by `patchedElement` eventually.
+ * See if 2 nodes are the same.
  * @param {Element|Text} element 
  * @param {VNode} vnode 
  */
@@ -83,39 +69,35 @@ function isSameNode(element, vnode) {
 }
 
 /**
- * Patch 2 nodes' props/attributes.
+ * Patch 2 same nodes.
  * @param {Element} element 
  * @param {VNode} vnode 
  */
-function patchProps(element, vnode) {
-  let attrs = vnode.props,
-      old = element.$props,
-      isSvg = !!element.ns;
+function patchAttrs(element, vnode) {
+  let attrs = vnode.attrs,
+      oldAttrs = element.__attrs__;
 
-  // if this dom node wasn't diffed before, or wasn't created
-  // by `create`, pull out its attributes and patch them.
-  if (old == null || isEmpty(old)) {
-    old = element.$props = old == null ? {}: old;
+  // Just ensure it is right if `element` was created by a vnode.
+  if (oldAttrs == null) {
+    oldAttrs = element.__attrs__ = oldAttrs == null ? {} : oldAttrs;
     for (let a = element.attributes, i = a.length; i--; ) {
-      old[a[i].name] = a[i].value;
+      oldAttrs[a[i].name] = a[i].value;
     }
   }
 
   // remove attributes not on vnode.
-  for(const name in old) {
-    if (old[name] && !(attrs && attrs[name])) {
-      setAttribute(element, name, (old[name] = void 0), isSvg);
+  for(const name in oldAttrs) {
+    if (oldAttrs[name] && !(attrs && attrs[name])) {
+      setAttribute(element, name, (oldAttrs[name] = void 0));
     }
   }
 
   // add new & update attributes.
-  // Don't worry about style object,
-  // because `setAttribute` will deal with it.
   for (const name in attrs) {
-    if (!(name in old) || attrs[name] !== (
+    if (!(name in oldAttrs) || attrs[name] !== (
       name === 'value' || name === 'checked' ? element[name] : old[name])
     ) {
-      setAttribute(element, name, attrs[name], isSvg);
+      setAttribute(element, name, (oldAttrs[name] = attrs[name]));
     }
   }
 }

@@ -1,17 +1,7 @@
 import { eventHookRe, XLINK_NS, xlinkRe } from "./util";
+import { modules } from './module-manager';
 import VNode from './vnode';
 
-export default domManager;
-
-// dom mangager. Used internally.
-const domManager = {
-  append,
-  insertBefore,
-  remove,
-  create,
-  setAttribute,
-  emptyChildren
-};
 
 /**
  * @param {Element} parentNode 
@@ -37,30 +27,17 @@ export function insertBefore(parentNode, node, domNode) {
  * @param {Element} node Optional replacement of `domNode`.
  */
 export function remove(parentNode, domNode, node) {
-  let i, res, hooks = domNode.$hooks;
+  let res;
 
   if (parentNode && domNode.parentNode === parentNode) {
-    if (hooks && (i = hooks.beforeRemove) && (typeof i === 'function')) {
-      if (i(domNode) === false)
-        return;
-    }
-    
-    (node) && (parentNode.replaceChild(node, domNode)) && (res = node);
-    (parentNode.removeChild(domNode)) && (res = domNode);
-    
-    if (hooks && (i = hooks.removed) && (typeof i === 'function')) {
-      i(domNode);
-    }
+    node && parentNode.replaceChild(node, domNode) && (res = node);
+    parentNode.removeChild(domNode) && (res = domNode);
   }
 
   else if (domNode && node) {
     res = node;
   }
 
-  else {
-    console.warn(`The element ${node.id ? node.tagName+'#'+node.id : node.tagName} wasn't mounted on document.`)
-  }
-  
   return res;
 }
 
@@ -69,41 +46,24 @@ export function remove(parentNode, domNode, node) {
  * @param {String|Number|VNode} vnode 
  */
 export function create(vnode) {
-  // create a text node if it is a string or a number.
-  if (typeof vnode === 'string' || typeof vnode === 'number')
+
+  if (typeof vnode === 'string')
     return document.createTextNode(vnode);
 
-  const tagName = vnode.tagName,
-        props = vnode.props,
+  let i;
+  const ns = vnode.ns,
+        attrs = vnode.attrs,
+        modAttrs = vnode.modAttrs,
+        tagName = vnode.tagName,
         children = vnode.children,
-        ns = vnode.ns,
-        element = ns
+        elem = ns
           ? document.createElementNS(ns, tagName)
           : document.createElement(tagName);
 
-  let i;
 
-  // for next diff.
-  element.$props = props;
-  for (const propName in props) {
-    const event = propName.match(eventHookRe);
-    if (event) {
-      const handler = typeof props[propName] === 'function'
-        ? props[propName]
-        : new Error(`Handler to ${event[1]} is not a function`);
-
-      if (handler instanceof Error) {
-        console.warn(`Failed to add listener for ${event[1]}: ${handler.message}`);
-      }
-
-      // for next diff.
-      (element.$listeners || (element.$listeners = {}))[event[1]] = handler;
-      element.addEventListener(event[1], handler, false);
-    }
-
-    else {
-      setAttribute(element, propName, props[propName], !!ns);
-    }
+  elem.__attrs__ = attrs;
+  for (const name in attrs) {
+    setAttribute(elem, name, attrs[name]);
   }
 
   children.forEach((child, i) => {
@@ -119,120 +79,87 @@ export function create(vnode) {
       console.warn(`Unrecognizable node: ${child}`);
     }
 
-    element.appendChild(childElement);
+    elem.appendChild(childElement);
   });
 
-  // Invoke "created hooks"
-  if ((i = vnode.hooks) && (i = i.created) && (typeof i === 'function')) {
-    i(element);
+  for (const name in modAttrs) {
+    modules[name].creating(modAttrs[name]);
   }
-  element.$hooks && (element.$hooks = vnode.hooks);
-  delete props.$hooks;
 
-  return element;
+  return elem;
 }
 
-/**
- * Set attribute/property on an element.
- * @param {Element} element 
- * @param {String} attrName 
- * @param {String} value 
- */
-export function setAttribute(element, attrName, value, isNameSpaced) {
-  let ns, oldValue;
+export function setAttribute(elem, name, value) {
+  let msg, isNS = !!(elem.tagName === 'svg');
 
-  attrName = attrName === 'className' ? 'class' : attrName;
+  switch(name) {
+    case 'key':
+      elem.__key__ = value;
+      break;
 
-  switch(attrName) {
-  case 'key':
-    element.key = value;
-    break;
-  
-  case 'style':   /** if style is an object, it'll always be patched. */
-    oldValue = element.$style;
+    case 'namespace':
+      break;
 
-    if (!value || typeof value === 'string' || typeof oldValue === 'string') {
-      // if `value` is an object, it will be reset below.
-      element.style.cssText = value || '';
-    }
-    
-    if (value && typeof value === 'object') {
-      // set every old style field to empty.
-      if (typeof oldValue !== 'string') {
-        for (let i in oldValue) {
-          if (!(i in value))
-            element.style[i] = '';
+    case 'children':
+    case 'innerHTML':
+      msg = failMsg(elem, name);
+      console.warn(msg);
+      break;
+
+    default:
+      // Set property as long as possible.
+      if (value && !isNS && (name in elem) && (name !== 'type')) {
+        try {
+          elem[name] = value ? value : void 0;
+        } catch(e) {
+          msg = failMsg(elem, name);
+          console.warn(msg);
         }
       }
-      
-      // you might be wondering why don't I compare the value before setting
-      // it. In fact, no comparison is needed because it won't cause the browser's
-      // repaint or reflow if the new value is the same as old one.
-      for (let i in value) {
-        element.style[i] = value[i];
+
+      // Set to property as a fall back.
+      else {
+        isNS = isNS && !!(name.match(xlinkRe));
+        if (value && isNS) {
+          elem.setAttributeNS(XLINK_NS, name, value);
+        } else if (!value && isNS) {
+          elem.removeAttributeNS(XLINK_NS, name);
+        } else if (value) {
+          elem.setAttribute(name, value);
+        } else {
+          elem.removeAttribute(name);
+        }
       }
     }
-
-    // for next diff.
-    value && (element.$style = value);
-
-    break;
-  
-  case 'class':
-    element.className = value || '';
-    break;
-
-  case 'children':
-    console.warn(`Failed to set "children" on element ${element.tagName}.`);
-    break;
-
-  case 'innerHTML':
-    console.warn(`Failed to set "innerHTML" on a "${element.tagName.toLocaleLowerCase()}".`);
-    break;
-
-  default:
-    if (!isNameSpaced && (attrName in element) && (attrName !== 'type')) {
-      // set it as a property.
-      try {
-        element[attrName] = value ? value : '';
-      } catch(e) {
-        console.warn(`Failed to set attribute: ${attrName} on element "${element.id ? element.tagName + element.id : element.tagName }"`)
-      }
-
-      if (value == null) {
-        element.removeAttribute(attrName);
-      }
-    }
-
-    else {
-      ns = isNameSpaced && !!(attrName.match(xlinkRe));
-      // set it as an attribute.
-      if (value && ns) {
-        element.setAttributeNS(XLINK_NS, attrName, value);
-      } else if (!value && ns) {
-        element.removeAttributeNS(XLINK_NS, attrName);
-      } else if (value) {
-        element.setAttribute(attrName, value);
-      } else {
-        element.removeAttribute(attrName);
-      }
-    }
-  }
 }
 
 /**
  * Empty an element's children.
- * Removing from the last child might cause less repaint and reflow.
- * @param {Element} element 
+ * Remove from the last child might cause less repaint and reflow.
+ * @param {Element} elem
  */
-export function emptyChildren(element) {
-  if (element && element.childNodes && element.childNodes.length) {
-    let fc = element.firstChild, lc = element.lastChild;
+export function emptyChildren(elem) {
+  if (elem && elem.childNodes && elem.childNodes.length) {
+    let fc = elem.firstChild, lc = elem.lastChild;
 
     while(fc !== lc) {
-      remove(element, lc);
-      lc = element.lastChild;
+      remove(elem, lc);
+      lc = elem.lastChild;
     }
-    remove(element, fc);
+    remove(elem, fc);
   }
+}
+
+
+function failMsg(elem, attr) {
+  let selector = elem.tagName;
+
+  selector = elem.id
+    ? `${selector}#${elem.id}`
+    : selector;
+  selector = elem.className
+    ? `${selector}.${elem.className.join('.')}`
+    : selector;
+  
+    return `Failed to set "${attr}" on element "${selector}".`
 }

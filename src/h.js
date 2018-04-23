@@ -37,13 +37,11 @@ function parseSelector(selector) {
 /**
  * Original propto: h(selector, props, ...children).
  * 
- * Found a more elegant way to handle children. Referred to Hyperapp's `h` function, which is dead simple. 
- * @see https://github.com/hyperapp/hyperapp/blob/master/src/index.js
  * @param {String|Function} selector a built-in tag name or custom function that returns an object created by h.
- * @param {Object} props optional. any style, event listeners, and className should be put here.
+ * @param {Object} attrs optional. any style, event listeners, and className should be put here.
  * @param {*} rest optional children. Can be nested.
  */
-function h(selector, props) {
+function h(selector, attrs) {
   // Case 1: `selector` is a function.
   if (typeof selector === 'function') {
     // use `new` in case it is a class.
@@ -52,25 +50,26 @@ function h(selector, props) {
 
   let tagInfo, children = [], child, lastPrimitive = false;
 
-  (props || (props = {}))
+  (attrs || (attrs = {}))
 
   // collect children
   for (let i = arguments.length; i-- > 2; ) {
     stack.push(arguments[i]);
   }
 
-  // if props is any of these below, it must be a child.
-  if ((props instanceof VNode) ||
-    (typeof props === 'string') ||
-    (typeof props === 'number') ||
-    (typeof props === 'boolean') ||
-    (isArray(props))
+  // if attrs is any of these below, it must be a child.
+  if ((attrs instanceof VNode) ||
+    (typeof attrs === 'string') ||
+    (typeof attrs === 'number') ||
+    (typeof attrs === 'boolean') ||
+    (isArray(attrs))
   ) {
-    stack.push(props);
-    props = {};
+    stack.push(attrs);
+    attrs = {};
   }
 
   // handle nested children if there's any.
+  let idxKey = 0;
   while (stack.length) {
     if ((child = stack.pop()) && child.pop !== void 0) {
       for (let i = child.length; i--;)  stack.push(child[i]);
@@ -86,6 +85,9 @@ function h(selector, props) {
       }
 
       else {
+        if (child instanceof VNode && (child.attrs.key == null)) {
+          child.key = child.attrs.key = idxKey++;
+        }
         children.push(child);
         lastPrimitive = typeof child === 'string' ? true : false;
       }
@@ -101,22 +103,22 @@ function h(selector, props) {
 
   // Case 3: `selector` is a selector.
   else if (typeof selector === 'string') {
-    if (props.className && isArray(props.className)) {
-      props.className = props.className.join(' ');
+    if (attrs.className && isArray(attrs.className)) {
+      attrs.className = attrs.className.join(' ');
     }
 
     tagInfo = parseSelector(selector);
     if (tagInfo.className) {
-      props.className = props.className
-        ? props.className + ' ' + tagInfo.className
+      attrs.className = attrs.className
+        ? attrs.className + ' ' + tagInfo.className
         : tagInfo.className;
     }
 
     if (tagInfo.id) {
-      props.id = props.id ? props.id : tagInfo.id;
+      attrs.id = attrs.id ? attrs.id : tagInfo.id;
     }
 
-    return new VNode(tagInfo.tagName, props, children);
+    return new VNode(tagInfo.tagName, attrs, children);
   }
   
   else {

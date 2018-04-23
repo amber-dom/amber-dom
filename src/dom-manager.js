@@ -1,4 +1,4 @@
-import { eventHookRe, XLINK_NS, xlinkRe } from "./util";
+import { XLINK_NS, xlinkRe } from "./util";
 import { modules } from './module-manager';
 import VNode from './vnode';
 

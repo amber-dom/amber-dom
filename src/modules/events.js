@@ -46,7 +46,9 @@ function proxyEvents(ev) {
     params = handler.params;
     handler = handler.handler;
 
-    handler && params && handler(ev, params);
-    handler && handler(ev);
+    if (handler && params != null)
+      handler(ev, ...params);
+    else if (handler)
+      handler && handler(ev);
   }
 }

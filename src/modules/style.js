@@ -16,13 +16,13 @@ function updateInlineStyle(elem, style) {
     // set every old style field to empty.
     if (typeof oldStyle !== 'string') {
       for (let i in oldStyle) {
-        if (!(i in value))
-          element.style[i] = '';
+        if (!(i in style))
+          elem.style[i] = '';
       }
     }
     
-    for (let i in value) {
-      element.style[i] = value[i];
+    for (let i in style) {
+      elem.style[i] = style[i];
     }
   }
 

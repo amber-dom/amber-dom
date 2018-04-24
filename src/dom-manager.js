@@ -48,7 +48,7 @@ export function remove(parentNode, domNode, node) {
 export function create(vnode) {
   if (vnode == null)  return null;
 
-  if (typeof vnode === 'string')
+  if (typeof vnode === 'string' || typeof vnode === 'number')
     return document.createTextNode(vnode);
 
   let i;

@@ -83,7 +83,7 @@ export function create(vnode) {
     elem.appendChild(childElement);
   });
 
-  for (const name in modAttrs) {
+  for (const name in modules) {
     modules[name].creating(elem, modAttrs[name]);
   }
 

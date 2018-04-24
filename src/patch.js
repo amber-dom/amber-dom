@@ -44,7 +44,7 @@ function patchElement(element, vnode, same) {
   else if (same || isSameNode(element, vnode)) {
     patchAttrs(element, vnode);
     patchChildren(element, vnode);
-    for (const name in vnode.modAttrs) {
+    for (const name in modules) {
       modules[name].updating(element, vnode.modAttrs[name]);
     }
   }

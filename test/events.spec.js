@@ -1,5 +1,5 @@
 import h from '../src/h'
-import { create as createElement } from '../src/dom-manager'
+import createElement from '../src/create-element'
 import patch from '../src/patch'
 
 function renderClickButton(clickHandler) {

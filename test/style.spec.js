@@ -1,6 +1,6 @@
 import h from '../src/h'
 import patch from '../src/patch'
-import {create as createElement} from '../src/dom-manager'
+import createElement from '../src/create-element'
 
 describe('style', () => {
   it('add style using object literal', () => {

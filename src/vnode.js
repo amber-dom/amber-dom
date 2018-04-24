@@ -1,5 +1,5 @@
 import { svgRe, SVG_NS } from './util';
-import { modules } from './module-manager';
+import modules from './mods';
 export default VNode;
 
 

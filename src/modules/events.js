@@ -1,11 +1,11 @@
 export default {
   name: 'events',
-  creating: addEventListeners,
-  updating: addEventListeners
+  creating: updateListeners,
+  updating: updateListeners
 }
 
 
-function addEventListeners(elem, events) {
+function updateListeners(elem, events) {
   let handler, params, value;
 
   for (let name in events) {

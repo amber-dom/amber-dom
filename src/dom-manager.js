@@ -1,5 +1,5 @@
 import { XLINK_NS, xlinkRe } from "./util";
-import { modules } from './module-manager';
+import modules from './mods';
 import VNode from './vnode';
 
 
@@ -84,7 +84,7 @@ export function create(vnode) {
   });
 
   for (const name in modules) {
-    modules[name].creating(elem, modAttrs[name]);
+    (i = modules[name]) && (i = i.creating) && (i(elem, modAttrs[name]));
   }
 
   return elem;

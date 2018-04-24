@@ -1,5 +1,5 @@
 import VNode from './vnode';
-import { modules } from './module-manager';
+import modules from './mods';
 import { 
   setAttribute,
   insertBefore,
@@ -33,6 +33,8 @@ function patchElement(element, vnode, same) {
   if (vnode == null || typeof vnode === 'boolean')
     vnode = '';
 
+  let i;
+
   // 1. both text nodes.
   if ((element.nodeType === 3) && (typeof vnode === 'string')) {
     const oldText = element.textContent || element.nodeValue;
@@ -45,7 +47,7 @@ function patchElement(element, vnode, same) {
     patchAttrs(element, vnode);
     patchChildren(element, vnode);
     for (const name in modules) {
-      modules[name].updating(element, vnode.modAttrs[name]);
+      (i = modules[name]) && (i = i.updating) && (i(element, vnode.modAttrs[name]));
     }
   }
 

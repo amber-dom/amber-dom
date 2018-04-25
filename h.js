@@ -1,1 +1,0 @@
-export { default as h } from '.src/h';

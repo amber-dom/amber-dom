@@ -1,12 +1,27 @@
 export default {
   name: 'style',
-  creating: updateInlineStyle,
+  creating: initInlineStyle,
   updating: updateInlineStyle
 }
 
+function initInlineStyle(elem, style) {
+  elem.__style__ = style;
+  if (typeof style === 'string') {
+    elem.style.cssText = style;
+  }
+
+  else {
+    for (let i in style) {
+      elem.style[i] && (elem.style[i] = style[i])
+    }
+  }
+}
 
 function updateInlineStyle(elem, style) {
   let oldStyle = elem.__style__;
+
+  if (oldStyle == null && style == null)
+    return;
 
   if (!style || typeof style === 'string' || typeof oldStyle === 'string') {
     elem.style.cssText = style || '';
@@ -22,7 +37,7 @@ function updateInlineStyle(elem, style) {
     }
     
     for (let i in style) {
-      elem.style[i] = style[i];
+      elem.style[i] && (elem.style[i] = style[i]);
     }
   }
 

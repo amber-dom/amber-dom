@@ -67,7 +67,7 @@ function patchElement(element, vnode, same) {
  * @param {VNode} vnode 
  */
 function isSameNode(element, vnode) {
-  return element.key === vnode.key && element.tagName === vnode.tagName;
+  return element.__key__ === vnode.key && element.tagName === vnode.tagName;
 }
 
 /**
@@ -97,7 +97,7 @@ function patchAttrs(element, vnode) {
   // add new & update attributes.
   for (const name in attrs) {
     if (!(name in oldAttrs) || attrs[name] !== (
-      name === 'value' || name === 'checked' ? element[name] : old[name])
+      name === 'value' || name === 'checked' ? element[name] : oldAttrs[name])
     ) {
       setAttribute(element, name, (oldAttrs[name] = attrs[name]));
     }
@@ -233,37 +233,33 @@ function patchChildren(element, vnode) {
       }
     }
 
-    // NOTE: The outer if might be unnecessary.
-    // if oldStartCh is ahead of oldEndCh or is oldEndCh
-    if (vStart <= vEnd || oldStartCh !== oldEndCh || oldStartCh === oldEndCh) {
-      if (oldStartCh) {
+    if (oldStartCh) {
 
-        // oldStartCh is ahead of oldEndCh, which means
-        // there are children to be removed.
-        while(oldStartCh !== oldEndCh) {
-          elemToMove = oldStartCh;
-          oldStartCh = oldStartCh.nextSibling;
-          remove(element, elemToMove);
-        }
+      // oldStartCh is ahead of oldEndCh, which means
+      // there are children to be removed.
+      while(oldStartCh !== oldEndCh) {
+        elemToMove = oldStartCh;
+        oldStartCh = oldStartCh.nextSibling;
+        remove(element, elemToMove);
+      }
 
-        if (isSameNode(oldEndCh, vChildren[vEnd])) {
-          patchElement(oldEndCh, vChildren[vEnd], true);
-          if (vStart === vEnd) {
-            return;
-          }
-          vEnd--;
+      if (isSameNode(oldEndCh, vChildren[vEnd])) {
+        patchElement(oldEndCh, vChildren[vEnd], true);
+        if (vStart === vEnd) {
+          return;
         }
+        vEnd--;
+      }
 
-        else {
-          elemToMove = oldEndCh;
-          oldEndCh = oldEndCh.nextSibling;
-          remove(element, elemToMove);
-        }
+      else {
+        elemToMove = oldEndCh;
+        oldEndCh = oldEndCh.nextSibling;
+        remove(element, elemToMove);
+      }
 
-        // append new children if there's any.
-        for (let i = vStart; i <= vEnd; i++) {
-          insertBefore(element, create(vChildren[i]), oldEndCh);
-        }
+      // append new children if there's any.
+      for (let i = vStart; i <= vEnd; i++) {
+        insertBefore(element, create(vChildren[i]), oldEndCh);
       }
     }
   }

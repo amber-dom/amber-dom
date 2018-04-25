@@ -18,7 +18,7 @@ gulp.task('build:es', () => {
   }).then(bundle => {
     return bundle.write({
       sourcemapFile: './dist/amber-dom.sourceMap.ejs',
-      file: './dist/amber-dom.ejs',
+      file: './dist/amber-dom.esm.js',
       format: 'es'
     })
   })

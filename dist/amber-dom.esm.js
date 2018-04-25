@@ -85,25 +85,12 @@ function proxyEvents(ev) {
 
 var style = {
   name: 'style',
-  creating: initInlineStyle,
+  creating: updateInlineStyle,
   updating: updateInlineStyle
 };
 
-function initInlineStyle(elem, style) {
-  elem.__style__ = style;
-  if (typeof style === 'string') {
-    elem.style.cssText = style;
-  } else {
-    for (var i in style) {
-      elem.style[i] && (elem.style[i] = style[i]);
-    }
-  }
-}
-
 function updateInlineStyle(elem, style) {
   var oldStyle = elem.__style__;
-
-  if (oldStyle == null && style == null) return;
 
   if (!style || typeof style === 'string' || typeof oldStyle === 'string') {
     elem.style.cssText = style || '';
@@ -118,7 +105,7 @@ function updateInlineStyle(elem, style) {
     }
 
     for (var _i in style) {
-      elem.style[_i] && (elem.style[_i] = style[_i]);
+      elem.style[_i] = style[_i];
     }
   }
 

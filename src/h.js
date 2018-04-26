@@ -1,5 +1,4 @@
 import VNode from './vnode';
-import { isArray } from './util';
 export default h;
 
 
@@ -62,7 +61,7 @@ function h(selector, attrs) {
     (typeof attrs === 'string') ||
     (typeof attrs === 'number') ||
     (typeof attrs === 'boolean') ||
-    (isArray(attrs))
+    (attrs.pop != null)
   ) {
     stack.push(attrs);
     attrs = {};
@@ -103,7 +102,7 @@ function h(selector, attrs) {
 
   // Case 3: `selector` is a selector.
   else if (typeof selector === 'string') {
-    if (attrs.className && isArray(attrs.className)) {
+    if (attrs.className && attrs.className.pop != null) {
       attrs.className = attrs.className.join(' ');
     }
 

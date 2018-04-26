@@ -1,7 +1,9 @@
-import { svgRe, SVG_NS } from './util';
-import modules from './mods';
+import { modules } from './module-manager';
 export default VNode;
 
+
+const svgRe = /(svg|SVG)/;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
  * Add namespace for `vnode` and recursively add it to its children.

@@ -1,19 +1,116 @@
-// Some helper functions.
-function isArray(obj) {
-  return Object.prototype.toString.call(obj) === '[object Array]';
+var moduleManager = {
+  addModules: addModules,
+  rmModules: rmModules,
+  initModules: initModules
+};
+
+var modules = {};
+
+/**
+ * Add an array of modules.
+ * @param {Array|Object} mods an array of modules to add.
+ */
+function addModules(mods) {
+  if (mods && !!mods.pop) {
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = mods[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var mod = _step.value;
+
+        if (isMod(mod)) {
+          modules[mod.name] = mod;
+        } else {
+          var msg = errMsg(mod);
+          console.warn(msg);
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+  } else if (isMod(mods)) {
+    modules[mods.name] = mods;
+  } else {
+    var _msg = errMsg(mods);
+    console.warn(_msg);
+  }
 }
 
-// Some constants or Regex.
-var svgRe = /(svg|SVG)/;
-var xlinkRe = /^xlink:(.*)$/;
-var SVG_NS = 'http://www.w3.org/2000/svg';
-var XLINK_NS = 'http://www.w3.org/1999/xlink';
+/**
+ * Initialize modules.
+ * @param {Array} mods an array of modules.
+ */
+function initModules(mods) {
+  for (var name in modules) {
+    modules[name] = void 0;
+  }
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
+  if (mods != null) {
+    addModules(mods);
+  }
+}
+
+/**
+ * Remove module(s).
+ * @param {Array} mods an array of module names.
+ */
+function rmModules(mods) {
+  if (mods && !!mods.pop) {
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = mods[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var name = _step2.value;
+
+        modules[name] = void 0;
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+  } else if (mods) {
+    modules[mods] = void 0;
+  }
+}
+
+function isMod(obj) {
+  return obj != null && obj.name && obj.creating && typeof obj.creating === 'function' && obj.updating && typeof obj.updating === 'function';
+}
+
+function errMsg(mod) {
+  if (mod == null) return 'Given a null or undefined object as module.';
+
+  var msg = 'Unrecognized module: \n{\n';
+  for (var name in mod) {
+    msg += '  ' + name + ': ' + mod[name] + '\n';
+  }msg += '}';
+  return msg;
+}
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -31,90 +128,8 @@ var toConsumableArray = function (arr) {
   }
 };
 
-var events = {
-  name: 'events',
-  creating: updateListeners,
-  updating: updateListeners
-};
-
-function updateListeners(elem, events) {
-  var handler = void 0,
-      params = void 0,
-      value = void 0;
-
-  for (var name in events) {
-    value = events[name];
-
-    // a single listener
-    if (typeof value === 'function') {
-      handler = value;
-    }
-
-    // a listener with params.
-    else if (value && !!value.shift && (handler = value.shift()) && typeof handler === 'function') {
-        params = value;
-      }
-
-      // remove a listener.
-      else if (value === void 0) {
-          handler = void 0;
-          params = void 0;
-        } else {
-          console.warn('Failed to add ' + name + ' listener.');
-          continue;
-        }
-
-    (elem.__listeners__ || (elem.__listeners__ = {}))[name] = { handler: handler, params: params };
-    elem.addEventListener(name, proxyEvents);
-  }
-}
-
-function proxyEvents(ev) {
-  var handler = void 0,
-      params = void 0,
-      elem = ev.currentTarget,
-      listeners = elem.__listeners__;
-
-  if (listeners && (handler = listeners[ev.type])) {
-    params = handler.params;
-    handler = handler.handler;
-
-    if (handler && params != null) handler.apply(undefined, [ev].concat(toConsumableArray(params)));else if (handler) handler && handler(ev);
-  }
-}
-
-var style = {
-  name: 'style',
-  creating: updateInlineStyle,
-  updating: updateInlineStyle
-};
-
-function updateInlineStyle(elem, style) {
-  var oldStyle = elem.__style__;
-
-  if (!style || typeof style === 'string' || typeof oldStyle === 'string') {
-    elem.style.cssText = style || '';
-  }
-
-  if (style && (typeof style === 'undefined' ? 'undefined' : _typeof(style)) === 'object') {
-    // set every old style field to empty.
-    if (typeof oldStyle !== 'string') {
-      for (var i in oldStyle) {
-        if (!(i in style)) elem.style[i] = '';
-      }
-    }
-
-    for (var _i in style) {
-      elem.style[_i] = style[_i];
-    }
-  }
-
-  elem.__style__ = style;
-}
-
-// The exported `modules` object is used internally throughout
-// amber-dom, but should not be accessed from outside of this lib. 
-var modules = { events: events, style: style };
+var svgRe = /(svg|SVG)/;
+var SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
  * Add namespace for `vnode` and recursively add it to its children.
@@ -166,6 +181,9 @@ function VNode(tagName, attrs, children) {
   // set up namespace.
   ns && addNS(this, ns);
 };
+
+var xlinkRe = /^xlink:(.*)$/;
+var XLINK_NS = 'http://www.w3.org/1999/xlink';
 
 /**
  * @param {Element} parentNode
@@ -368,7 +386,7 @@ function h(selector, attrs) {
   }
 
   // if attrs is any of these below, it must be a child.
-  if (attrs instanceof VNode || typeof attrs === 'string' || typeof attrs === 'number' || typeof attrs === 'boolean' || isArray(attrs)) {
+  if (attrs instanceof VNode || typeof attrs === 'string' || typeof attrs === 'number' || typeof attrs === 'boolean' || attrs.pop != null) {
     stack.push(attrs);
     attrs = {};
   }
@@ -404,7 +422,7 @@ function h(selector, attrs) {
 
   // Case 3: `selector` is a selector.
   else if (typeof selector === 'string') {
-      if (attrs.className && isArray(attrs.className)) {
+      if (attrs.className && attrs.className.pop != null) {
         attrs.className = attrs.className.join(' ');
       }
 
@@ -700,117 +718,6 @@ function createKeyMap(children, start, end) {
   }
 
   return keyedChildren;
-}
-
-var moduleManager = {
-  addModules: addModules,
-  rmModules: rmModules,
-  initModules: initModules
-
-  /**
-   * Add an array of modules.
-   * @param {Array|Object} mods an array of modules to add.
-   */
-};function addModules(mods) {
-  if (mods && !!mods.pop) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = mods[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var mod = _step.value;
-
-        if (isMod(mod)) {
-          modules[mod.name] = mod;
-        } else {
-          var msg = errMsg(mod);
-          console.warn(msg);
-        }
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-  } else if (isMod(mods)) {
-    modules[mods.name] = mods;
-  } else {
-    var _msg = errMsg(mods);
-    console.warn(_msg);
-  }
-}
-
-/**
- * Initialize modules.
- * @param {Array} mods an array of modules.
- */
-function initModules(mods) {
-  for (var name in modules) {
-    modules[name] = void 0;
-  }
-
-  if (mods != null) {
-    addModules(mods);
-  }
-}
-
-/**
- * Remove module(s).
- * @param {Array} mods an array of module names.
- */
-function rmModules(mods) {
-  if (mods && !!mods.pop) {
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = mods[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var name = _step2.value;
-
-        modules[name] = void 0;
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-          _iterator2.return();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-  } else if (mods) {
-    modules[mods] = void 0;
-  }
-}
-
-function isMod(obj) {
-  return obj != null && obj.name && obj.creating && typeof obj.creating === 'function' && obj.updating && typeof obj.updating === 'function';
-}
-
-function errMsg(mod) {
-  if (mod == null) return 'Given a null or undefined object as module.';
-
-  var msg = 'Unrecognized module: \n{\n';
-  for (var name in mod) {
-    msg += '  ' + name + ': ' + mod[name] + '\n';
-  }msg += '}';
-  return msg;
 }
 
 export { create as createElement, h, patch, moduleManager as moduleManger };

@@ -1,6 +1,9 @@
-import { XLINK_NS, xlinkRe } from "./util";
-import modules from './mods';
+import { modules } from './module-manager';
 import VNode from './vnode';
+
+
+const xlinkRe = /^xlink:(.*)$/;
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
 
 
 /**

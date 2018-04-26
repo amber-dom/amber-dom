@@ -3,9 +3,9 @@
   "version": "0.0.8",
   "description": "A lightweight virtual dom library.",
   "main": "index.js",
-  "module": "dist/amber-dom.ejs",
+  "module": "amber-dom.esm.js",
   "scripts": {
-    "build": "rollup --config rollup.config.build.js",
+    "build": "gulp default",
     "dev": "export NODE_ENV=development && karma start --browsers Chrome",
     "test": "export NODE_ENV=production && karma start"
   },

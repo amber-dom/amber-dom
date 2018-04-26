@@ -1,8 +1,19 @@
 import h from '../src/h'
 import patch from '../src/patch'
 import createElement from '../src/create-element'
+import { addModules, initModules } from '../src/module-manager'
+import style from '../src/modules/style'
+
 
 describe('style', () => {
+  before(() => {
+    addModules(style)
+  })
+
+  after(() => {
+    initModules()
+  })
+
   it('add style using object literal', () => {
     let elem = createElement(h('div', {style: {fontSize: '12px'}}))
     expect(elem.style.fontSize).to.equal('12px')

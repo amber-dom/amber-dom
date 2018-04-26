@@ -1,6 +1,9 @@
 import h from '../src/h'
 import createElement from '../src/create-element'
 import patch from '../src/patch'
+import { addModules, initModules } from '../src/module-manager'
+import events from '../src/modules/events'
+
 
 function renderClickButton(clickHandler) {
   return h('button', {
@@ -20,6 +23,14 @@ function rClickMOBtn(handlers) {
 }
 
 describe('events', () => {
+  before(() => {
+    addModules([events])
+  })
+
+  after(() => {
+    initModules()
+  })
+
   it('without params', () => {
     let isOn = false
 

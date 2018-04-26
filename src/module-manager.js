@@ -1,11 +1,10 @@
-import modules from "./mods";
-
-
 export default {
   addModules,
   rmModules,
   initModules
 }
+
+export const modules = {};
 
 /**
  * Add an array of modules.

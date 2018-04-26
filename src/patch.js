@@ -1,5 +1,5 @@
 import VNode from './vnode';
-import modules from './mods';
+import { modules } from './module-manager';
 import { 
   setAttribute,
   insertBefore,

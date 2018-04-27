@@ -1,4 +1,3 @@
-import { modules } from './module-manager';
 import VNode from './vnode';
 
 
@@ -46,9 +45,10 @@ export function remove(parentNode, domNode, node) {
 
 /**
  * Create a DOM node represented by `vnode`
- * @param {String|Number|VNode} vnode 
+ * @param {String|Number|VNode} vnode a virtual node.
+ * @param {Object} modules a hash of module, with keys equal module names.
  */
-export function create(vnode) {
+export function create(vnode, modules) {
   if (vnode == null)  return null;
 
   if (typeof vnode === 'string' || typeof vnode === 'number')
@@ -57,7 +57,6 @@ export function create(vnode) {
   let i;
   const ns = vnode.ns,
         attrs = vnode.attrs,
-        modAttrs = vnode.modAttrs,
         tagName = vnode.tagName,
         children = vnode.children,
         elem = ns
@@ -65,16 +64,19 @@ export function create(vnode) {
           : document.createElement(tagName);
 
 
-  elem.__attrs__ = attrs;
+  elem.__attrs__ = {};
   for (const name in attrs) {
-    setAttribute(elem, name, attrs[name]);
+    if (!(name in modules)) {
+      setAttribute(elem, name, attrs[name]);
+      elem.__attrs__[name] = attrs[name];
+    }
   }
 
   children.forEach((child, i) => {
     let childElement;
 
     if (child instanceof VNode || typeof child === 'string') {
-      childElement = create(child);
+      childElement = create(child, modules);
     }
 
     // TODO: add thunk.
@@ -89,7 +91,7 @@ export function create(vnode) {
   });
 
   for (const name in modules) {
-    (i = modules[name]) && (i = i.creating) && (i(elem, modAttrs[name]));
+    (i = modules[name]) && (i = i.creating) && (i(elem, attrs[name]));
   }
 
   return elem;

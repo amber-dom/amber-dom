@@ -1,6 +1,4 @@
-import h from '../src/h'
-import createElement from '../src/create-element'
-import patch from '../src/patch'
+import mg, { h } from '../src/amber-dom';
 
 
 /** Use for testing patching. Assume no dupplicate item. */
@@ -20,6 +18,8 @@ function renderWithCustomKey(list) {
  * This file tests the basic usage of amber-dom.
  */
 describe('amber-dom', () => {
+
+  const { patch, createElement } = mg.init(mg.defaultModules())
 
   describe('hyperscript', () => {
     it('can create vnode with element tag', () => {

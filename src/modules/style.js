@@ -1,7 +1,9 @@
-export default {
-  name: 'style',
-  creating: updateInlineStyle,
-  updating: updateInlineStyle
+export default function() {
+  return {
+    name: 'style',
+    creating: updateInlineStyle,
+    updating: updateInlineStyle
+  }
 }
 
 function updateInlineStyle(elem, style) {

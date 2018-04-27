@@ -1,18 +1,8 @@
-import h from '../src/h'
-import patch from '../src/patch'
-import createElement from '../src/create-element'
-import { add, init } from '../src/module-manager'
-import style from '../src/modules/style'
+import mg, { h } from '../src/amber-dom'
 
 
 describe('style', () => {
-  before(() => {
-    add(style)
-  })
-
-  after(() => {
-    init()
-  })
+  const { patch, createElement } = mg.init([mg.style()])
 
   it('add style using object literal', () => {
     let elem = createElement(h('div', {style: {fontSize: '12px'}}))

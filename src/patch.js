@@ -1,5 +1,4 @@
 import VNode from './vnode';
-import { modules } from './module-manager';
 import { 
   setAttribute,
   insertBefore,
@@ -15,9 +14,9 @@ export default patch;
  * @param {Element|Text} domRoot 
  * @param {VNode} vRoot 
  */
-function patch(domRoot, vRoot) {
+function patch(domRoot, vRoot, modules) {
   if (domRoot instanceof Element || domRoot instanceof Text) {
-    domRoot = patchElement(domRoot, vRoot);
+    domRoot = patchElement(domRoot, vRoot, modules);
   }
   return domRoot;
 }
@@ -29,7 +28,7 @@ function patch(domRoot, vRoot) {
  * @param {VNode} vnode 
  * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
-function patchElement(element, vnode, same) {
+function patchElement(element, vnode, modules, same) {
   if (vnode == null || typeof vnode === 'boolean')
     vnode = '';
 
@@ -44,16 +43,16 @@ function patchElement(element, vnode, same) {
   
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
-    patchAttrs(element, vnode);
-    patchChildren(element, vnode);
+    patchAttrs(element, vnode, modules);
+    patchChildren(element, vnode, modules);
     for (const name in modules) {
-      (i = modules[name]) && (i = i.updating) && (i(element, vnode.modAttrs[name]));
+      (i = modules[name]) && (i = i.updating) && (i(element, vnode.attrs[name]));
     }
   }
 
   // 3. not the same node.
   else {
-    let node = create(vnode);
+    let node = create(vnode, modules);
     // replace the `element` with `node`.
     element = remove(element.parentNode, element, node);
   }
@@ -75,7 +74,7 @@ function isSameNode(element, vnode) {
  * @param {Element} element 
  * @param {VNode} vnode 
  */
-function patchAttrs(element, vnode) {
+function patchAttrs(element, vnode, modules) {
   let attrs = vnode.attrs,
       oldAttrs = element.__attrs__;
 
@@ -96,7 +95,7 @@ function patchAttrs(element, vnode) {
 
   // add new & update attributes.
   for (const name in attrs) {
-    if (!(name in oldAttrs) || attrs[name] !== (
+    if (!(name in modules) && !(name in oldAttrs) || attrs[name] !== (
       name === 'value' || name === 'checked' ? element[name] : oldAttrs[name])
     ) {
       setAttribute(element, name, (oldAttrs[name] = attrs[name]));
@@ -109,7 +108,7 @@ function patchAttrs(element, vnode) {
  * @param {Element} element 
  * @param {VNode} vnode 
  */
-function patchChildren(element, vnode) {
+function patchChildren(element, vnode, modules) {
   const oldChildren = element.childNodes,
         vChildren = vnode.children,
         oldLen = oldChildren.length,
@@ -126,14 +125,14 @@ function patchChildren(element, vnode) {
         elemToMove;
 
     if (oldLen === 1 && isSameNode(oldChildren[0], ch)) {
-      patchElement(oldChildren[0], ch, true);
+      patchElement(oldChildren[0], ch, modules, true);
     }
 
     else {
       // Try to find a child node that match.
       for (let i = 1; i < oldLen; i++) {
         if (isSameNode(oldChildren[i], ch)) {
-          patchElement(oldChildren[i], ch, true);
+          patchElement(oldChildren[i], ch, modules, true);
 
           elemToMove = oldChildren[i];
           break;
@@ -142,7 +141,7 @@ function patchChildren(element, vnode) {
 
       // If it wasn't found, create one from the vnode.
       if (elemToMove === void 0) {
-        elemToMove = create(ch);
+        elemToMove = create(ch, modules);
       }
       emptyChildren(element);
       element.appendChild(elemToMove);
@@ -167,7 +166,7 @@ function patchChildren(element, vnode) {
       while(vStart <= vEnd && oldStartCh !== oldEndCh && 
         oldStartCh && vStartCh && isSameNode(oldStartCh, vStartCh)
       ) {
-        patchElement(oldStartCh, vStartCh, true);
+        patchElement(oldStartCh, vStartCh, modules, true);
 
         oldStartCh = oldStartCh.nextSibling;
         vStartCh = vChildren[++vStart];
@@ -176,7 +175,7 @@ function patchChildren(element, vnode) {
       while(vStart <= vEnd && oldStartCh !== oldEndCh && 
         oldEndCh && vEndCh && isSameNode(oldEndCh, vEndCh)
       ) {
-        patchElement(oldEndCh, vEndCh, true);
+        patchElement(oldEndCh, vEndCh, modules, true);
 
         oldEndCh = oldEndCh.previousSibling;
         vEndCh = vChildren[--vEnd];
@@ -187,7 +186,7 @@ function patchChildren(element, vnode) {
 
       // Reorder corner case 1.
       if (isSameNode(oldStartCh, vEndCh)) {
-        patchElement(oldStartCh, vEndCh, true);
+        patchElement(oldStartCh, vEndCh, modules, true);
         elemToMove = oldStartCh;
         oldStartCh = oldStartCh.nextSibling;
         // place it right behind oldEndCh.
@@ -198,7 +197,7 @@ function patchChildren(element, vnode) {
 
       // Reorder corner case 2.
       else if (isSameNode(oldEndCh, vStartCh)) {
-        patchElement(oldEndCh, vStartCh, true);
+        patchElement(oldEndCh, vStartCh, modules, true);
         elemToMove = oldEndCh;
         oldEndCh = oldEndCh.previousSibling;
         // place it right in front of oldStartCh.
@@ -218,13 +217,13 @@ function patchChildren(element, vnode) {
 
         // not found. Create a new child.
         if (elemToMove == null) {
-          elemToMove = create(vStartCh);
+          elemToMove = create(vStartCh, modules);
           // place it right in front of oldStartCh
           insertBefore(element, elemToMove, oldStartCh);
         }
         // found. Move it to its place.
         else {
-          patchElement(elemToMove, startChild);
+          patchElement(elemToMove, startChild, modules);
           keyedChildren[elemToMove.key] = void 0;
           // place it right in front of oldStartCh
           insertBefore(element, elemToMove, oldStartCh);
@@ -244,7 +243,7 @@ function patchChildren(element, vnode) {
       }
 
       if (isSameNode(oldEndCh, vChildren[vEnd])) {
-        patchElement(oldEndCh, vChildren[vEnd], true);
+        patchElement(oldEndCh, vChildren[vEnd], modules, true);
         if (vStart === vEnd) {
           return;
         }
@@ -259,7 +258,7 @@ function patchChildren(element, vnode) {
 
       // append new children if there's any.
       for (let i = vStart; i <= vEnd; i++) {
-        insertBefore(element, create(vChildren[i]), oldEndCh);
+        insertBefore(element, create(vChildren[i], modules), oldEndCh);
       }
     }
   }
@@ -274,7 +273,7 @@ function patchChildren(element, vnode) {
     let newCh;
 
     for (let i = 0, newCh = vChildren[0]; i < vLen; i++, newCh = vChildren[i]) {
-      element.appendChild(create(newCh));
+      element.appendChild(create(newCh, modules));
     }
   }
 }

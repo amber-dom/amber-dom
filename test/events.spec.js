@@ -1,8 +1,4 @@
-import h from '../src/h'
-import createElement from '../src/create-element'
-import patch from '../src/patch'
-import { add, init } from '../src/module-manager'
-import events from '../src/modules/events'
+import mg, { h } from '../src/amber-dom'
 
 
 function renderClickButton(clickHandler) {
@@ -23,13 +19,7 @@ function rClickMOBtn(handlers) {
 }
 
 describe('events', () => {
-  before(() => {
-    add([events])
-  })
-
-  after(() => {
-    init()
-  })
+  const { patch, createElement } = mg.init([mg.events()])
 
   it('without params', () => {
     let isOn = false

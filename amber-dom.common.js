@@ -2,122 +2,11 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var moduleManager = {
-  add: add,
-  remove: remove,
-  init: init
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
-
-var modules = {};
-
-/**
- * Add an array of modules.
- * @param {Array|Object} mods an array of modules to add.
- */
-function add(mods) {
-  if (mods && !!mods.pop) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = mods[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var mod = _step.value;
-
-        if (isMod(mod)) {
-          modules[mod.name] = mod;
-        } else {
-          var msg = errMsg(mod);
-          console.warn(msg);
-        }
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-  } else if (isMod(mods)) {
-    modules[mods.name] = mods;
-  } else {
-    var _msg = errMsg(mods);
-    console.warn(_msg);
-  }
-}
-
-/**
- * Initialize modules.
- * @param {Array} mods an array of modules.
- */
-function init(mods) {
-  for (var name in modules) {
-    modules[name] = void 0;
-  }
-
-  if (mods != null) {
-    add(mods);
-  }
-}
-
-/**
- * Remove module(s).
- * @param {Array} mods an array of module names.
- */
-function remove(mods) {
-  if (mods && !!mods.pop) {
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = mods[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var name = _step2.value;
-
-        modules[name] = void 0;
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-          _iterator2.return();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-  } else if (mods) {
-    modules[mods] = void 0;
-  }
-}
-
-function isMod(obj) {
-  return obj != null && typeof obj.name === 'string' && obj.name.length;
-}
-
-function errMsg(mod) {
-  if (mod == null) return 'Given a null or undefined object as module.';
-
-  var msg = 'Unrecognized module: \n{\n';
-  var fields = [];
-  for (var name in mod) {
-    fields.push('\t' + name + ': ' + mod[name]);
-  }msg += fields.join(',\n\n');
-  msg += '\n}\n';
-  msg += 'A module must contain a a string name.';
-  return msg;
-}
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -134,6 +23,91 @@ var toConsumableArray = function (arr) {
     return Array.from(arr);
   }
 };
+
+function events () {
+  return {
+    name: 'events',
+    creating: updateListeners,
+    updating: updateListeners
+  };
+}
+
+function updateListeners(elem, events) {
+  var handler = void 0,
+      params = void 0,
+      value = void 0;
+
+  for (var name in events) {
+    value = events[name];
+
+    // a single listener
+    if (typeof value === 'function') {
+      handler = value;
+    }
+
+    // a listener with params.
+    else if (value && !!value.shift && (handler = value.shift()) && typeof handler === 'function') {
+        params = value;
+      }
+
+      // remove a listener.
+      else if (value === void 0) {
+          handler = void 0;
+          params = void 0;
+        } else {
+          console.warn('Failed to add ' + name + ' listener.');
+          continue;
+        }
+
+    (elem.__listeners__ || (elem.__listeners__ = {}))[name] = { handler: handler, params: params };
+    elem.addEventListener(name, proxyEvents);
+  }
+}
+
+function proxyEvents(ev) {
+  var handler = void 0,
+      params = void 0,
+      elem = ev.currentTarget,
+      listeners = elem.__listeners__;
+
+  if (listeners && (handler = listeners[ev.type])) {
+    params = handler.params;
+    handler = handler.handler;
+
+    if (handler && params != null) handler.apply(undefined, [ev].concat(toConsumableArray(params)));else if (handler) handler(ev);
+  }
+}
+
+function style () {
+  return {
+    name: 'style',
+    creating: updateInlineStyle,
+    updating: updateInlineStyle
+  };
+}
+
+function updateInlineStyle(elem, style) {
+  var oldStyle = elem.__style__;
+
+  if (!style || typeof style === 'string' || typeof oldStyle === 'string') {
+    elem.style.cssText = style || '';
+  }
+
+  if (style && (typeof style === 'undefined' ? 'undefined' : _typeof(style)) === 'object') {
+    // set every old style field to empty.
+    if (typeof oldStyle !== 'string') {
+      for (var i in oldStyle) {
+        if (!(i in style)) elem.style[i] = '';
+      }
+    }
+
+    for (var _i in style) {
+      elem.style[_i] = style[_i];
+    }
+  }
+
+  elem.__style__ = style;
+}
 
 var svgRe = /(svg|SVG)/;
 var SVG_NS = 'http://www.w3.org/2000/svg';
@@ -171,194 +145,13 @@ function VNode(tagName, attrs, children) {
   var ns = attrs.namespace || (svgRe.test(tagName) ? SVG_NS : void 0);
 
   this.tagName = !!ns ? tagName : tagName.toUpperCase();
-  this.attrs = {};
-  this.modAttrs = {};
+  this.attrs = attrs;
   this.key = attrs.key;
   this.children = children;
-
-  // separate module-managed attrs and self-managed attrs.
-  for (var name in attrs) {
-    if (!(name in modules)) {
-      this.attrs[name] = attrs[name];
-    } else {
-      this.modAttrs[name] = attrs[name];
-    }
-  }
 
   // set up namespace.
   ns && addNS(this, ns);
 };
-
-var xlinkRe = /^xlink:(.*)$/;
-var XLINK_NS = 'http://www.w3.org/1999/xlink';
-
-/**
- * @param {Element} parentNode
- * @param {Element} node 
- * @param {Element} domNode the reference node.
- */
-function insertBefore(parentNode, node, domNode) {
-  parentNode.insertBefore(node, domNode);
-}
-
-/**
- * Remove a child on a node if it exists.
- * @param {Element} parentNode the parent of the node to be removed.
- * @param {Element} domNode the node to be removed.
- * @param {Element} node Optional replacement of `domNode`.
- */
-function remove$1(parentNode, domNode, node) {
-  var res = void 0;
-
-  if (parentNode && domNode.parentNode === parentNode) {
-    node && parentNode.replaceChild(node, domNode) && (res = node);
-    node == null && parentNode.removeChild(domNode) && (res = domNode);
-  } else if (domNode && node) {
-    res = node;
-  }
-
-  return res;
-}
-
-/**
- * Create a DOM node represented by `vnode`
- * @param {String|Number|VNode} vnode 
- */
-function create(vnode) {
-  if (vnode == null) return null;
-
-  if (typeof vnode === 'string' || typeof vnode === 'number') return document.createTextNode(vnode);
-
-  var i = void 0;
-  var ns = vnode.ns,
-      attrs = vnode.attrs,
-      modAttrs = vnode.modAttrs,
-      tagName = vnode.tagName,
-      children = vnode.children,
-      elem = ns ? document.createElementNS(ns, tagName) : document.createElement(tagName);
-
-  elem.__attrs__ = attrs;
-  for (var name in attrs) {
-    setAttribute(elem, name, attrs[name]);
-  }
-
-  children.forEach(function (child, i) {
-    var childElement = void 0;
-
-    if (child instanceof VNode || typeof child === 'string') {
-      childElement = create(child);
-    }
-
-    // TODO: add thunk.
-
-    else {
-        i = childErrMsg(child);
-        console.warn(i);
-        return;
-      }
-
-    elem.appendChild(childElement);
-  });
-
-  for (var _name in modules) {
-    (i = modules[_name]) && (i = i.creating) && i(elem, modAttrs[_name]);
-  }
-
-  return elem;
-}
-
-function setAttribute(elem, name, value) {
-  var msg = void 0,
-      isNS = !!(elem.tagName === 'svg');
-
-  switch (name) {
-    case 'key':
-      elem.__key__ = value;
-      break;
-
-    case 'className':
-    case '_className':
-      if (value.join) {
-        value = value.join(' ');
-      }
-
-      elem.className = value;
-      break;
-
-    case 'namespace':
-      break;
-
-    case 'children':
-    case 'innerHTML':
-      msg = attrErrMsg(elem, name);
-      console.warn(msg);
-      break;
-
-    default:
-      // Set property as long as possible.
-      if (value && !isNS && name in elem && name !== 'type') {
-        try {
-          elem[name] = value ? value : void 0;
-        } catch (e) {
-          msg = attrErrMsg(elem, name);
-          console.warn(msg);
-        }
-      }
-
-      // Set to property as a fall back.
-      else {
-          isNS = isNS && !!name.match(xlinkRe);
-          if (value && isNS) {
-            elem.setAttributeNS(XLINK_NS, name, value);
-          } else if (!value && isNS) {
-            elem.removeAttributeNS(XLINK_NS, name);
-          } else if (value) {
-            elem.setAttribute(name, value);
-          } else {
-            elem.removeAttribute(name);
-          }
-        }
-  }
-}
-
-/**
- * Empty an element's children.
- * Remove from the last child might cause less repaint and reflow.
- * @param {Element} elem
- */
-function emptyChildren(elem) {
-  if (elem && elem.childNodes && elem.childNodes.length) {
-    var fc = elem.firstChild,
-        lc = elem.lastChild;
-
-    while (fc !== lc) {
-      remove$1(elem, lc);
-      lc = elem.lastChild;
-    }
-    remove$1(elem, fc);
-  }
-}
-
-function attrErrMsg(elem, attr) {
-  var selector = elem.tagName;
-
-  selector = elem.id ? selector + '#' + elem.id : selector;
-  selector = elem.className ? selector + '.' + elem.className.join('.') : selector;
-
-  return 'Failed to set "' + attr + '" on element "' + selector + '".';
-}
-
-function childErrMsg(obj) {
-  var msg = 'Unrecognizable child: \n{\n';
-  var fields = [];
-
-  for (var name in obj) {
-    fields.push('\t' + name + ': ' + obj[name]);
-  }
-  msg += fields.join(',\n');
-  msg += '\n}\n';
-  return msg;
-}
 
 var classIdSpliter = /([\.#]?[^\s#.]+)/;
 var stack = []; // internal stack for parsing children.
@@ -467,13 +260,187 @@ function h(selector, attrs) {
     }
 }
 
+var xlinkRe = /^xlink:(.*)$/;
+var XLINK_NS = 'http://www.w3.org/1999/xlink';
+
+/**
+ * @param {Element} parentNode
+ * @param {Element} node 
+ * @param {Element} domNode the reference node.
+ */
+function insertBefore(parentNode, node, domNode) {
+  parentNode.insertBefore(node, domNode);
+}
+
+/**
+ * Remove a child on a node if it exists.
+ * @param {Element} parentNode the parent of the node to be removed.
+ * @param {Element} domNode the node to be removed.
+ * @param {Element} node Optional replacement of `domNode`.
+ */
+function remove(parentNode, domNode, node) {
+  var res = void 0;
+
+  if (parentNode && domNode.parentNode === parentNode) {
+    node && parentNode.replaceChild(node, domNode) && (res = node);
+    node == null && parentNode.removeChild(domNode) && (res = domNode);
+  } else if (domNode && node) {
+    res = node;
+  }
+
+  return res;
+}
+
+/**
+ * Create a DOM node represented by `vnode`
+ * @param {String|Number|VNode} vnode a virtual node.
+ * @param {Object} modules a hash of module, with keys equal module names.
+ */
+function create(vnode, modules) {
+  if (vnode == null) return null;
+
+  if (typeof vnode === 'string' || typeof vnode === 'number') return document.createTextNode(vnode);
+
+  var i = void 0;
+  var ns = vnode.ns,
+      attrs = vnode.attrs,
+      tagName = vnode.tagName,
+      children = vnode.children,
+      elem = ns ? document.createElementNS(ns, tagName) : document.createElement(tagName);
+
+  elem.__attrs__ = {};
+  for (var name in attrs) {
+    if (!(name in modules)) {
+      setAttribute(elem, name, attrs[name]);
+      elem.__attrs__[name] = attrs[name];
+    }
+  }
+
+  children.forEach(function (child, i) {
+    var childElement = void 0;
+
+    if (child instanceof VNode || typeof child === 'string') {
+      childElement = create(child, modules);
+    }
+
+    // TODO: add thunk.
+
+    else {
+        i = childErrMsg(child);
+        console.warn(i);
+        return;
+      }
+
+    elem.appendChild(childElement);
+  });
+
+  for (var _name in modules) {
+    (i = modules[_name]) && (i = i.creating) && i(elem, attrs[_name]);
+  }
+
+  return elem;
+}
+
+function setAttribute(elem, name, value) {
+  var msg = void 0,
+      isNS = !!(elem.tagName === 'svg');
+
+  switch (name) {
+    case 'key':
+      elem.__key__ = value;
+      break;
+
+    case 'className':
+    case '_className':
+      if (value.join) {
+        value = value.join(' ');
+      }
+
+      elem.className = value;
+      break;
+
+    case 'namespace':
+      break;
+
+    case 'children':
+    case 'innerHTML':
+      msg = attrErrMsg(elem, name);
+      console.warn(msg);
+      break;
+
+    default:
+      // Set property as long as possible.
+      if (value && !isNS && name in elem && name !== 'type') {
+        try {
+          elem[name] = value ? value : void 0;
+        } catch (e) {
+          msg = attrErrMsg(elem, name);
+          console.warn(msg);
+        }
+      }
+
+      // Set to property as a fall back.
+      else {
+          isNS = isNS && !!name.match(xlinkRe);
+          if (value && isNS) {
+            elem.setAttributeNS(XLINK_NS, name, value);
+          } else if (!value && isNS) {
+            elem.removeAttributeNS(XLINK_NS, name);
+          } else if (value) {
+            elem.setAttribute(name, value);
+          } else {
+            elem.removeAttribute(name);
+          }
+        }
+  }
+}
+
+/**
+ * Empty an element's children.
+ * Remove from the last child might cause less repaint and reflow.
+ * @param {Element} elem
+ */
+function emptyChildren(elem) {
+  if (elem && elem.childNodes && elem.childNodes.length) {
+    var fc = elem.firstChild,
+        lc = elem.lastChild;
+
+    while (fc !== lc) {
+      remove(elem, lc);
+      lc = elem.lastChild;
+    }
+    remove(elem, fc);
+  }
+}
+
+function attrErrMsg(elem, attr) {
+  var selector = elem.tagName;
+
+  selector = elem.id ? selector + '#' + elem.id : selector;
+  selector = elem.className ? selector + '.' + elem.className.join('.') : selector;
+
+  return 'Failed to set "' + attr + '" on element "' + selector + '".';
+}
+
+function childErrMsg(obj) {
+  var msg = 'Unrecognizable child: \n{\n';
+  var fields = [];
+
+  for (var name in obj) {
+    fields.push('\t' + name + ': ' + obj[name]);
+  }
+  msg += fields.join(',\n');
+  msg += '\n}\n';
+  return msg;
+}
+
 /**
  * @param {Element|Text} domRoot 
  * @param {VNode} vRoot 
  */
-function patch(domRoot, vRoot) {
+function patch(domRoot, vRoot, modules) {
   if (domRoot instanceof Element || domRoot instanceof Text) {
-    domRoot = patchElement(domRoot, vRoot);
+    domRoot = patchElement(domRoot, vRoot, modules);
   }
   return domRoot;
 }
@@ -484,7 +451,7 @@ function patch(domRoot, vRoot) {
  * @param {VNode} vnode 
  * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
-function patchElement(element, vnode, same) {
+function patchElement(element, vnode, modules, same) {
   if (vnode == null || typeof vnode === 'boolean') vnode = '';
 
   var i = void 0;
@@ -497,18 +464,18 @@ function patchElement(element, vnode, same) {
 
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
-      patchAttrs(element, vnode);
-      patchChildren(element, vnode);
+      patchAttrs(element, vnode, modules);
+      patchChildren(element, vnode, modules);
       for (var name in modules) {
-        (i = modules[name]) && (i = i.updating) && i(element, vnode.modAttrs[name]);
+        (i = modules[name]) && (i = i.updating) && i(element, vnode.attrs[name]);
       }
     }
 
     // 3. not the same node.
     else {
-        var node = create(vnode);
+        var node = create(vnode, modules);
         // replace the `element` with `node`.
-        element = remove$1(element.parentNode, element, node);
+        element = remove(element.parentNode, element, node);
       }
 
   return element;
@@ -528,7 +495,7 @@ function isSameNode(element, vnode) {
  * @param {Element} element 
  * @param {VNode} vnode 
  */
-function patchAttrs(element, vnode) {
+function patchAttrs(element, vnode, modules) {
   var attrs = vnode.attrs,
       oldAttrs = element.__attrs__;
 
@@ -549,7 +516,7 @@ function patchAttrs(element, vnode) {
 
   // add new & update attributes.
   for (var _name in attrs) {
-    if (!(_name in oldAttrs) || attrs[_name] !== (_name === 'value' || _name === 'checked' ? element[_name] : oldAttrs[_name])) {
+    if (!(_name in modules) && !(_name in oldAttrs) || attrs[_name] !== (_name === 'value' || _name === 'checked' ? element[_name] : oldAttrs[_name])) {
       setAttribute(element, _name, oldAttrs[_name] = attrs[_name]);
     }
   }
@@ -560,7 +527,7 @@ function patchAttrs(element, vnode) {
  * @param {Element} element 
  * @param {VNode} vnode 
  */
-function patchChildren(element, vnode) {
+function patchChildren(element, vnode, modules) {
   var oldChildren = element.childNodes,
       vChildren = vnode.children,
       oldLen = oldChildren.length,
@@ -577,12 +544,12 @@ function patchChildren(element, vnode) {
           elemToMove = void 0;
 
       if (oldLen === 1 && isSameNode(oldChildren[0], ch)) {
-        patchElement(oldChildren[0], ch, true);
+        patchElement(oldChildren[0], ch, modules, true);
       } else {
         // Try to find a child node that match.
         for (var i = 1; i < oldLen; i++) {
           if (isSameNode(oldChildren[i], ch)) {
-            patchElement(oldChildren[i], ch, true);
+            patchElement(oldChildren[i], ch, modules, true);
 
             elemToMove = oldChildren[i];
             break;
@@ -591,7 +558,7 @@ function patchChildren(element, vnode) {
 
         // If it wasn't found, create one from the vnode.
         if (elemToMove === void 0) {
-          elemToMove = create(ch);
+          elemToMove = create(ch, modules);
         }
         emptyChildren(element);
         element.appendChild(elemToMove);
@@ -611,14 +578,14 @@ function patchChildren(element, vnode) {
 
         while (vStart <= vEnd && oldStartCh !== oldEndCh) {
           while (vStart <= vEnd && oldStartCh !== oldEndCh && oldStartCh && vStartCh && isSameNode(oldStartCh, vStartCh)) {
-            patchElement(oldStartCh, vStartCh, true);
+            patchElement(oldStartCh, vStartCh, modules, true);
 
             oldStartCh = oldStartCh.nextSibling;
             vStartCh = vChildren[++vStart];
           }
 
           while (vStart <= vEnd && oldStartCh !== oldEndCh && oldEndCh && vEndCh && isSameNode(oldEndCh, vEndCh)) {
-            patchElement(oldEndCh, vEndCh, true);
+            patchElement(oldEndCh, vEndCh, modules, true);
 
             oldEndCh = oldEndCh.previousSibling;
             vEndCh = vChildren[--vEnd];
@@ -629,7 +596,7 @@ function patchChildren(element, vnode) {
 
           // Reorder corner case 1.
           if (isSameNode(oldStartCh, vEndCh)) {
-            patchElement(oldStartCh, vEndCh, true);
+            patchElement(oldStartCh, vEndCh, modules, true);
             _elemToMove = oldStartCh;
             oldStartCh = oldStartCh.nextSibling;
             // place it right behind oldEndCh.
@@ -640,7 +607,7 @@ function patchChildren(element, vnode) {
 
           // Reorder corner case 2.
           else if (isSameNode(oldEndCh, vStartCh)) {
-              patchElement(oldEndCh, vStartCh, true);
+              patchElement(oldEndCh, vStartCh, modules, true);
               _elemToMove = oldEndCh;
               oldEndCh = oldEndCh.previousSibling;
               // place it right in front of oldStartCh.
@@ -660,13 +627,13 @@ function patchChildren(element, vnode) {
 
                 // not found. Create a new child.
                 if (_elemToMove == null) {
-                  _elemToMove = create(vStartCh);
+                  _elemToMove = create(vStartCh, modules);
                   // place it right in front of oldStartCh
                   insertBefore(element, _elemToMove, oldStartCh);
                 }
                 // found. Move it to its place.
                 else {
-                    patchElement(_elemToMove, startChild);
+                    patchElement(_elemToMove, startChild, modules);
                     keyedChildren[_elemToMove.key] = void 0;
                     // place it right in front of oldStartCh
                     insertBefore(element, _elemToMove, oldStartCh);
@@ -682,11 +649,11 @@ function patchChildren(element, vnode) {
           while (oldStartCh !== oldEndCh) {
             _elemToMove = oldStartCh;
             oldStartCh = oldStartCh.nextSibling;
-            remove$1(element, _elemToMove);
+            remove(element, _elemToMove);
           }
 
           if (isSameNode(oldEndCh, vChildren[vEnd])) {
-            patchElement(oldEndCh, vChildren[vEnd], true);
+            patchElement(oldEndCh, vChildren[vEnd], modules, true);
             if (vStart === vEnd) {
               return;
             }
@@ -694,12 +661,12 @@ function patchChildren(element, vnode) {
           } else {
             _elemToMove = oldEndCh;
             oldEndCh = oldEndCh.nextSibling;
-            remove$1(element, _elemToMove);
+            remove(element, _elemToMove);
           }
 
           // append new children if there's any.
           for (var _i = vStart; _i <= vEnd; _i++) {
-            insertBefore(element, create(vChildren[_i]), oldEndCh);
+            insertBefore(element, create(vChildren[_i], modules), oldEndCh);
           }
         }
       }
@@ -713,7 +680,7 @@ function patchChildren(element, vnode) {
         else if (vLen !== 0) {
 
             for (var _i2 = 0, _newCh = vChildren[0]; _i2 < vLen; _i2++, _newCh = vChildren[_i2]) {
-              element.appendChild(create(_newCh));
+              element.appendChild(create(_newCh, modules));
             }
           }
 }
@@ -746,7 +713,91 @@ function createKeyMap(children, start, end) {
   return keyedChildren;
 }
 
-exports.createElement = create;
+var amberDom = {
+  h: h,
+  init: init,
+  style: style,
+  events: events,
+  patchElem: patch,
+  createElem: create,
+
+  defaultModules: function defaultModules() {
+    return [style(), events()];
+  }
+};
+
+/**
+ * Initialize modules.
+ * @param {Array|Object|null} mods an array of modules.
+ */
+function init(mods) {
+  var modules = {};
+
+  mods || (mods = []);
+
+  if (typeof mods.pop === 'function') {
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = mods[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var mod = _step.value;
+
+        if (isMod(mod)) {
+          modules[mod.name] = mod;
+        } else {
+          errMsg(mods);
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+  } else if (isMod(mods)) {
+    modules[mods.name] = mods;
+  } else {
+    errMsg(mods);
+  }
+
+  return {
+    patch: function patch$$1(elem, vnode) {
+      return patch(elem, vnode, modules);
+    },
+
+    createElement: function createElement(vnode) {
+      return create(vnode, modules);
+    }
+  };
+}
+
+function isMod(obj) {
+  return obj != null && typeof obj.name === 'string' && obj.name.length;
+}
+
+function errMsg(mod) {
+  if (mod == null) return 'Given a null or undefined object as module.';
+
+  var msg = 'Unrecognized module: \n{\n';
+  var fields = [];
+  for (var name in mod) {
+    fields.push('\t' + name + ': ' + mod[name]);
+  }msg += fields.join(',\n\n');
+  msg += '\n}\n';
+  msg += 'A module must contain a a string name.';
+  return msg;
+}
+
+exports.default = amberDom;
+exports.init = init;
 exports.h = h;
-exports.patch = patch;
-exports.modules = moduleManager;

@@ -1,4 +1,3 @@
-import { modules } from './module-manager';
 export default VNode;
 
 
@@ -36,19 +35,9 @@ class VNode {
     let ns = (attrs.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
 
     this.tagName = !!ns ? tagName : tagName.toUpperCase();
-    this.attrs = {};
-    this.modAttrs = {};
+    this.attrs = attrs;
     this.key = attrs.key;
     this.children = children;
-
-    // separate module-managed attrs and self-managed attrs.
-    for (let name in attrs) {
-      if (!(name in modules)) {
-        this.attrs[name] = attrs[name];
-      } else {
-        this.modAttrs[name] = attrs[name];
-      }
-    }
 
     // set up namespace.
     ns && addNS(this, ns);

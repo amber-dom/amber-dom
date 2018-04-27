@@ -1,8 +1,9 @@
 import h from '../src/h'
 import patch from '../src/patch'
 import createElement from '../src/create-element'
-import style from '../src/modules/style'
-import { add, init, remove } from '../src/module-manager'
+import modules from '../src/module-manager'
+import { add, remove, init } from '../src/module-manager'
+
 
 describe('module-manager', () => {
   describe('add', () => {
@@ -144,7 +145,7 @@ describe('module-manager', () => {
             elem.__x__ = attrs
           }
         },
-        style
+        modules.style()
       ])
 
       let elem = createElement(h('div', {x: "x.creating was called", style: {color: 'red'}}))

@@ -1,7 +1,9 @@
-export default {
-  name: 'events',
-  creating: updateListeners,
-  updating: updateListeners
+export default function() {
+  return {
+    name: 'events',
+    creating: updateListeners,
+    updating: updateListeners
+  }
 }
 
 

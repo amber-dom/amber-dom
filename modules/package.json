@@ -1,9 +1,0 @@
-{
-  "name": "modules",
-  "version": "1.0.0",
-  "description": "Built-in modules for amber-dom",
-  "main": "modules.common.js",
-  "module": "modules.esm.js",
-  "author": "aliwalker",
-  "license": "MIT"
-}

@@ -62,7 +62,7 @@ function proxyEvents(ev) {
     params = handler.params;
     handler = handler.handler;
 
-    if (handler && params != null) handler.apply(undefined, [ev].concat(toConsumableArray(params)));else if (handler) handler && handler(ev);
+    if (handler && params != null) handler.apply(undefined, [ev].concat(toConsumableArray(params)));else if (handler) handler(ev);
   }
 }
 

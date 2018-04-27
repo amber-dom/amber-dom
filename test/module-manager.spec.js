@@ -2,12 +2,12 @@ import h from '../src/h'
 import patch from '../src/patch'
 import createElement from '../src/create-element'
 import style from '../src/modules/style'
-import { addModules, initModules, rmModules } from '../src/module-manager'
+import { add, init, remove } from '../src/module-manager'
 
 describe('module-manager', () => {
-  describe('addModules', () => {
+  describe('add', () => {
     it('add a module', () => {
-      addModules({
+      add({
         name: 'foo',
   
         creating: (elem, fooAttrs) => {
@@ -31,7 +31,7 @@ describe('module-manager', () => {
     it('module must have "name", "creating" and "updating"', () => {
       // This module will not be added because not a name was
       // provided.
-      addModules({  
+      add({  
         creating: (elem, fooAttrs) => {
           // simply store some data in this DOM Node, if any.
           if (fooAttrs)
@@ -51,7 +51,7 @@ describe('module-manager', () => {
     })
 
     it('add multiple modules', () => {
-      addModules([{
+      add([{
         name: 'x',
         creating: (elem, attrs) => {
           elem.__x__ = attrs
@@ -80,9 +80,9 @@ describe('module-manager', () => {
   })
 
 
-  describe('rmModules', () => {
+  describe('remove', () => {
     it('remove a module', () => {
-      rmModules('foo')
+      remove('foo')
 
       let elem = createElement(h('div', {foo: "I'm removed"}))
       expect(elem.__foo__).to.equal(void 0)
@@ -91,7 +91,7 @@ describe('module-manager', () => {
     })
 
     it('remove multiple modules', () => {
-      rmModules(['x', 'y'])
+      remove(['x', 'y'])
       let elem = createElement(h('div', {x: "This is x.", y: "This is y."}))
       expect(elem.__x__).to.equal(void 0)
       expect(elem.__y__).to.equal(void 0)
@@ -102,9 +102,9 @@ describe('module-manager', () => {
     })
   })
 
-  describe('initModules', () => {
+  describe('init', () => {
     it('init without any module', () => {
-      initModules()
+      init()
       // Now all modules were removed. setting any module attributes will
       // not work.
       let elem = createElement(h('div', {style: {color: 'red'}}))
@@ -112,7 +112,7 @@ describe('module-manager', () => {
     })
 
     it('init with a module', () => {
-      initModules({
+      init({
         name: 'foo',
   
         creating: (elem, fooAttrs) => {
@@ -134,7 +134,7 @@ describe('module-manager', () => {
     })
 
     it('init with multiple modules', () => {
-      initModules([
+      init([
         {
           name: 'x',
           creating: (elem, attrs) => {

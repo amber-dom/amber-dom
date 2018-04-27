@@ -1,17 +1,17 @@
 import h from '../src/h'
 import patch from '../src/patch'
 import createElement from '../src/create-element'
-import { addModules, initModules } from '../src/module-manager'
+import { add, init } from '../src/module-manager'
 import style from '../src/modules/style'
 
 
 describe('style', () => {
   before(() => {
-    addModules(style)
+    add(style)
   })
 
   after(() => {
-    initModules()
+    init()
   })
 
   it('add style using object literal', () => {

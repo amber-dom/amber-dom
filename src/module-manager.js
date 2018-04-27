@@ -1,7 +1,7 @@
 export default {
-  addModules,
-  rmModules,
-  initModules
+  add,
+  remove,
+  init
 }
 
 export const modules = {};
@@ -10,7 +10,7 @@ export const modules = {};
  * Add an array of modules.
  * @param {Array|Object} mods an array of modules to add.
  */
-export function addModules(mods) {
+export function add(mods) {
   if (mods && !!mods.pop) {
     for (let mod of mods) {
       if (isMod(mod)) {
@@ -38,13 +38,13 @@ export function addModules(mods) {
  * Initialize modules.
  * @param {Array} mods an array of modules.
  */
-export function initModules(mods) {
+export function init(mods) {
   for (let name in modules) {
     modules[name] = void 0;
   }
   
   if (mods != null) {
-    addModules(mods);
+    add(mods);
   }
 }
 
@@ -52,7 +52,7 @@ export function initModules(mods) {
  * Remove module(s).
  * @param {Array} mods an array of module names.
  */
-export function rmModules(mods) {
+export function remove(mods) {
   if (mods && !!mods.pop) {
     for (let name of mods) {
       modules[name] = void 0;
@@ -65,19 +65,20 @@ export function rmModules(mods) {
 }
 
 function isMod(obj) {
-  return (obj != null) && (obj.name) &&
-    obj.creating && (typeof obj.creating === 'function') &&
-    obj.updating && (typeof obj.updating === 'function');
+  return (obj != null) && (typeof obj.name === 'string') && (obj.name.length);
 }
 
 function errMsg(mod) {
   if (mod == null)
     return 'Given a null or undefined object as module.';
   
-  let msg = 'Unrecognized module: \n{\n'
+  let msg = 'Unrecognized module: \n{\n';
+  let fields = []
   for (let name in mod)
-    msg += '  ' + name + ': ' + mod[name] + '\n';
+    fields.push('\t' + name + ': ' + mod[name])
 
-  msg += '}';
+  msg += fields.join(',\n\n');
+  msg += '\n}\n';
+  msg += 'A module must contain a a string name.'
   return msg;
 }

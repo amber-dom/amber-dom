@@ -34,7 +34,7 @@ export function remove(parentNode, domNode, node) {
 
   if (parentNode && domNode.parentNode === parentNode) {
     node && parentNode.replaceChild(node, domNode) && (res = node);
-    parentNode.removeChild(domNode) && (res = domNode);
+    node == null && parentNode.removeChild(domNode) && (res = domNode);
   }
 
   else if (domNode && node) {
@@ -80,7 +80,9 @@ export function create(vnode) {
     // TODO: add thunk.
 
     else {
-      console.warn(`Unrecognizable node: ${child}`);
+      i = childErrMsg(child);
+      console.warn(i);
+      return;
     }
 
     elem.appendChild(childElement);
@@ -101,12 +103,21 @@ export function setAttribute(elem, name, value) {
       elem.__key__ = value;
       break;
 
+    case 'className':
+    case '_className':
+      if (value.join) {
+        value = value.join(' ')
+      }
+      
+      elem.className = value;
+      break;
+
     case 'namespace':
       break;
 
     case 'children':
     case 'innerHTML':
-      msg = failMsg(elem, name);
+      msg = attrErrMsg(elem, name);
       console.warn(msg);
       break;
 
@@ -116,7 +127,7 @@ export function setAttribute(elem, name, value) {
         try {
           elem[name] = value ? value : void 0;
         } catch(e) {
-          msg = failMsg(elem, name);
+          msg = attrErrMsg(elem, name);
           console.warn(msg);
         }
       }
@@ -155,7 +166,7 @@ export function emptyChildren(elem) {
 }
 
 
-function failMsg(elem, attr) {
+function attrErrMsg(elem, attr) {
   let selector = elem.tagName;
 
   selector = elem.id
@@ -166,4 +177,16 @@ function failMsg(elem, attr) {
     : selector;
   
     return `Failed to set "${attr}" on element "${selector}".`
+}
+
+function childErrMsg(obj) {
+  let msg = 'Unrecognizable child: \n{\n';
+  let fields = [];
+
+  for (let name in obj) {
+    fields.push('\t' + name + ': ' + obj[name]);
+  }
+  msg += fields.join(',\n');
+  msg += '\n}\n';
+  return msg;
 }

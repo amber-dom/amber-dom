@@ -3,9 +3,9 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var moduleManager = {
-  addModules: addModules,
-  rmModules: rmModules,
-  initModules: initModules
+  add: add,
+  remove: remove,
+  init: init
 };
 
 var modules = {};
@@ -14,7 +14,7 @@ var modules = {};
  * Add an array of modules.
  * @param {Array|Object} mods an array of modules to add.
  */
-function addModules(mods) {
+function add(mods) {
   if (mods && !!mods.pop) {
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
@@ -57,13 +57,13 @@ function addModules(mods) {
  * Initialize modules.
  * @param {Array} mods an array of modules.
  */
-function initModules(mods) {
+function init(mods) {
   for (var name in modules) {
     modules[name] = void 0;
   }
 
   if (mods != null) {
-    addModules(mods);
+    add(mods);
   }
 }
 
@@ -71,7 +71,7 @@ function initModules(mods) {
  * Remove module(s).
  * @param {Array} mods an array of module names.
  */
-function rmModules(mods) {
+function remove(mods) {
   if (mods && !!mods.pop) {
     var _iteratorNormalCompletion2 = true;
     var _didIteratorError2 = false;
@@ -103,16 +103,19 @@ function rmModules(mods) {
 }
 
 function isMod(obj) {
-  return obj != null && obj.name && obj.creating && typeof obj.creating === 'function' && obj.updating && typeof obj.updating === 'function';
+  return obj != null && typeof obj.name === 'string' && obj.name.length;
 }
 
 function errMsg(mod) {
   if (mod == null) return 'Given a null or undefined object as module.';
 
   var msg = 'Unrecognized module: \n{\n';
+  var fields = [];
   for (var name in mod) {
-    msg += '  ' + name + ': ' + mod[name] + '\n';
-  }msg += '}';
+    fields.push('\t' + name + ': ' + mod[name]);
+  }msg += fields.join(',\n\n');
+  msg += '\n}\n';
+  msg += 'A module must contain a a string name.';
   return msg;
 }
 
@@ -204,12 +207,12 @@ function insertBefore(parentNode, node, domNode) {
  * @param {Element} domNode the node to be removed.
  * @param {Element} node Optional replacement of `domNode`.
  */
-function remove(parentNode, domNode, node) {
+function remove$1(parentNode, domNode, node) {
   var res = void 0;
 
   if (parentNode && domNode.parentNode === parentNode) {
     node && parentNode.replaceChild(node, domNode) && (res = node);
-    parentNode.removeChild(domNode) && (res = domNode);
+    node == null && parentNode.removeChild(domNode) && (res = domNode);
   } else if (domNode && node) {
     res = node;
   }
@@ -249,7 +252,9 @@ function create(vnode) {
     // TODO: add thunk.
 
     else {
-        console.warn('Unrecognizable node: ' + child);
+        i = childErrMsg(child);
+        console.warn(i);
+        return;
       }
 
     elem.appendChild(childElement);
@@ -271,12 +276,21 @@ function setAttribute(elem, name, value) {
       elem.__key__ = value;
       break;
 
+    case 'className':
+    case '_className':
+      if (value.join) {
+        value = value.join(' ');
+      }
+
+      elem.className = value;
+      break;
+
     case 'namespace':
       break;
 
     case 'children':
     case 'innerHTML':
-      msg = failMsg(elem, name);
+      msg = attrErrMsg(elem, name);
       console.warn(msg);
       break;
 
@@ -286,7 +300,7 @@ function setAttribute(elem, name, value) {
         try {
           elem[name] = value ? value : void 0;
         } catch (e) {
-          msg = failMsg(elem, name);
+          msg = attrErrMsg(elem, name);
           console.warn(msg);
         }
       }
@@ -318,20 +332,32 @@ function emptyChildren(elem) {
         lc = elem.lastChild;
 
     while (fc !== lc) {
-      remove(elem, lc);
+      remove$1(elem, lc);
       lc = elem.lastChild;
     }
-    remove(elem, fc);
+    remove$1(elem, fc);
   }
 }
 
-function failMsg(elem, attr) {
+function attrErrMsg(elem, attr) {
   var selector = elem.tagName;
 
   selector = elem.id ? selector + '#' + elem.id : selector;
   selector = elem.className ? selector + '.' + elem.className.join('.') : selector;
 
   return 'Failed to set "' + attr + '" on element "' + selector + '".';
+}
+
+function childErrMsg(obj) {
+  var msg = 'Unrecognizable child: \n{\n';
+  var fields = [];
+
+  for (var name in obj) {
+    fields.push('\t' + name + ': ' + obj[name]);
+  }
+  msg += fields.join(',\n');
+  msg += '\n}\n';
+  return msg;
 }
 
 var classIdSpliter = /([\.#]?[^\s#.]+)/;
@@ -426,13 +452,9 @@ function h(selector, attrs) {
 
   // Case 3: `selector` is a selector.
   else if (typeof selector === 'string') {
-      if (attrs.className && attrs.className.pop != null) {
-        attrs.className = attrs.className.join(' ');
-      }
-
       tagInfo = parseSelector(selector);
       if (tagInfo.className) {
-        attrs.className = attrs.className ? attrs.className + ' ' + tagInfo.className : tagInfo.className;
+        attrs._className = tagInfo.className;
       }
 
       if (tagInfo.id) {
@@ -486,7 +508,7 @@ function patchElement(element, vnode, same) {
     else {
         var node = create(vnode);
         // replace the `element` with `node`.
-        element = remove(element.parentNode, element, node);
+        element = remove$1(element.parentNode, element, node);
       }
 
   return element;
@@ -660,7 +682,7 @@ function patchChildren(element, vnode) {
           while (oldStartCh !== oldEndCh) {
             _elemToMove = oldStartCh;
             oldStartCh = oldStartCh.nextSibling;
-            remove(element, _elemToMove);
+            remove$1(element, _elemToMove);
           }
 
           if (isSameNode(oldEndCh, vChildren[vEnd])) {
@@ -672,7 +694,7 @@ function patchChildren(element, vnode) {
           } else {
             _elemToMove = oldEndCh;
             oldEndCh = oldEndCh.nextSibling;
-            remove(element, _elemToMove);
+            remove$1(element, _elemToMove);
           }
 
           // append new children if there's any.
@@ -690,7 +712,7 @@ function patchChildren(element, vnode) {
         // case 3: insert new DOM children.
         else if (vLen !== 0) {
 
-            for (var _i2 = 0, _newCh = vChildren[0]; _i2 < vLen; _i2++) {
+            for (var _i2 = 0, _newCh = vChildren[0]; _i2 < vLen; _i2++, _newCh = vChildren[_i2]) {
               element.appendChild(create(_newCh));
             }
           }
@@ -727,4 +749,4 @@ function createKeyMap(children, start, end) {
 exports.createElement = create;
 exports.h = h;
 exports.patch = patch;
-exports.moduleManger = moduleManager;
+exports.modules = moduleManager;

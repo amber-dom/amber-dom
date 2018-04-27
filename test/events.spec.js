@@ -1,7 +1,7 @@
 import h from '../src/h'
 import createElement from '../src/create-element'
 import patch from '../src/patch'
-import { addModules, initModules } from '../src/module-manager'
+import { add, init } from '../src/module-manager'
 import events from '../src/modules/events'
 
 
@@ -24,11 +24,11 @@ function rClickMOBtn(handlers) {
 
 describe('events', () => {
   before(() => {
-    addModules([events])
+    add([events])
   })
 
   after(() => {
-    initModules()
+    init()
   })
 
   it('without params', () => {

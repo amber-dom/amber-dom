@@ -49,6 +49,6 @@ function proxyEvents(ev) {
     if (handler && params != null)
       handler(ev, ...params);
     else if (handler)
-      handler && handler(ev);
+      handler(ev);
   }
 }

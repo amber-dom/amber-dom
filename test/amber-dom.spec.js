@@ -32,7 +32,7 @@ describe('amber-dom', () => {
       const vnode = h('div#hello.content.main')
       expect(vnode.tagName).to.equal('DIV')
       expect(vnode.attrs.id).to.equal('hello')
-      expect(vnode.attrs.className).to.equal('content main')
+      expect(vnode.attrs._className).to.equal('content main')
     })
 
     it('can create a vnode with attrs & a child', () => {
@@ -44,7 +44,7 @@ describe('amber-dom', () => {
       // test attrs.
       expect(vnode.tagName).to.equal('DIV')
       expect(vnode.attrs.id).to.equal('myDiv')
-      expect(vnode.attrs.className).to.equal('content main')
+      expect(vnode.attrs.className).deep.equal(['content', 'main'])
 
       // test children
       expect(vnode.children[0].tagName).to.equal('SPAN')
@@ -61,7 +61,7 @@ describe('amber-dom', () => {
       })
 
       expect(vnode1.attrs.className).to.equal('content main')
-      expect(vnode2.attrs.className).to.equal('content main')
+      expect(vnode2.attrs.className).deep.equal(['content', 'main'])
     })
 
     it('can create a vnode with attrs & children', () => {
@@ -199,6 +199,33 @@ describe('amber-dom', () => {
 
       expect(elem.nodeType).to.equal(Node.TEXT_NODE)
     })
+
+    it('"innerHTML" provided in attrs will not work.', () => {
+      let elem = createElement(h('div', {innerHTML: '<h1>Hello</h1>'}))
+
+      expect(elem.textContent).to.equal('')
+    })
+
+    it('"children" provided in attrs will not work.', () => {
+      let elem = createElement(h('div', {children: h('h1', 'Hello')}))
+
+      expect(elem.childNodes.length).to.equal(0)
+    })
+
+    it('"on*" properties can still be used to set up listeners.', () => {
+      let res = []
+      let elem = createElement(h('div', { onclick: () => {res.push(1)} }))
+
+      elem.click()
+      expect(res).deep.equal([1])
+    })
+
+    it('type of children is restricted.', () => {
+      let elem = createElement(h('div', [{text: "I'm not a child"}, "I'm a child"]))
+
+      expect(elem.childNodes.length).to.equal(1)
+      expect(elem.firstChild.textContent).to.equal("I'm a child")
+    })
   })
 
   describe('patch', () => {
@@ -249,11 +276,36 @@ describe('amber-dom', () => {
         expect(elem.childNodes[0].tagName).to.equal('P')
       })
 
+      it('patch child elements with prepends', () => {
+        let vnode = renderWithKeys(['JavaScript', 'HTML', 'CSS'])
+        let elem = createElement(vnode)
+
+        // with keys.
+        patch(elem, renderWithKeys(['amber-dom', 'JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('amber-dom')
+        expect(elem.childNodes[1].textContent).to.equal('JavaScript')
+        expect(elem.childNodes[2].textContent).to.equal('HTML')
+        expect(elem.childNodes[3].textContent).to.equal('CSS')
+
+        
+        // Without keys.
+        vnode = renderWithoutKeys(['JavaScript', 'HTML', 'CSS'])
+        elem = createElement(vnode)
+
+        patch(elem, renderWithoutKeys(['amber-dom', 'JavaScript', 'HTML', 'CSS']))
+        expect(elem.childNodes.length).to.equal(4)
+        expect(elem.firstChild.textContent).to.equal('amber-dom')
+        expect(elem.childNodes[1].textContent).to.equal('JavaScript')
+        expect(elem.childNodes[2].textContent).to.equal('HTML')
+        expect(elem.childNodes[3].textContent).to.equal('CSS')
+      })
+
       it('patch child elements with appends', () => {
         let vnode = renderWithKeys(['JavaScript', 'HTML', 'CSS'])
         let elem = createElement(vnode)
 
-        // With keys set. Assume no duplicate items.
+        // With keys
         patch(elem, renderWithKeys(['JavaScript', 'HTML', 'CSS', 'amber-dom', 'virtual dom']))
         expect(elem.childNodes.length).to.equal(5)
         expect(elem.firstChild.textContent).to.equal('JavaScript')
@@ -262,7 +314,7 @@ describe('amber-dom', () => {
         expect(elem.childNodes[3].textContent).to.equal('amber-dom')
         expect(elem.lastChild.textContent).to.equal('virtual dom')
 
-        // Without keys set.
+        // Without keys
         vnode = renderWithoutKeys(['JavaScript', 'HTML', 'CSS'])
         elem = createElement(vnode)
         patch(elem, renderWithoutKeys(['JavaScript', 'HTML', 'CSS', 'amber-dom', 'virtual dom']))
@@ -277,7 +329,7 @@ describe('amber-dom', () => {
       it('patch child elements with insertions', () => {
         let elem = createElement(renderWithKeys(['JavaScript', 'HTML', 'CSS']))
 
-        // With keys set.
+        // With keys
         patch(elem, renderWithKeys(['JavaScript', 'amber-dom', 'HTML', 'CSS']))
         expect(elem.childNodes.length).to.equal(4)
         expect(elem.firstChild.textContent).to.equal('JavaScript')
@@ -471,7 +523,7 @@ describe('amber-dom', () => {
     })
 
 
-    describe('patch element with keyed and unkeyed children', () => {
+    describe('patch element with randomly keyed children', () => {
       it('can deal with randomly set up data', () => {
         const data1 = [
           { key: 'appl', value: 'Apple'},
@@ -527,6 +579,20 @@ describe('amber-dom', () => {
       it('patch an empty, mounted DOM tree with different roots', () => {
         let dom = document.createElement('span')
     
+        document.addEventListener('DOMContentLoaded', () => {
+          document.body.appendChild(dom)
+          patch(dom, render({ message: 'hello' }))
+          expect(dom.childNodes.length).to.equal(1)
+          expect(dom.firstChild.tagName).to.equal('SPAN')
+          expect(dom.firstChild.firstChild.textContent).to.equal('hello')
+        })
+      })
+
+      it('patch a non-empty DOM tree', () => {
+        let dom = document.createElement('div')
+
+        dom.appendChild(document.createElement('span'))
+        dom.appendChild(document.createElement('p'))
         document.addEventListener('DOMContentLoaded', () => {
           document.body.appendChild(dom)
           patch(dom, render({ message: 'hello' }))

@@ -273,7 +273,7 @@ function patchChildren(element, vnode) {
   else if (vLen !== 0) {
     let newCh;
 
-    for (let i = 0, newCh = vChildren[0]; i < vLen; i++) {
+    for (let i = 0, newCh = vChildren[0]; i < vLen; i++, newCh = vChildren[i]) {
       element.appendChild(create(newCh));
     }
   }

@@ -102,15 +102,9 @@ function h(selector, attrs) {
 
   // Case 3: `selector` is a selector.
   else if (typeof selector === 'string') {
-    if (attrs.className && attrs.className.pop != null) {
-      attrs.className = attrs.className.join(' ');
-    }
-
     tagInfo = parseSelector(selector);
     if (tagInfo.className) {
-      attrs.className = attrs.className
-        ? attrs.className + ' ' + tagInfo.className
-        : tagInfo.className;
+      attrs._className = tagInfo.className;
     }
 
     if (tagInfo.id) {

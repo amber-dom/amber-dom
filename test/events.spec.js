@@ -19,7 +19,7 @@ function rClickMOBtn(handlers) {
 }
 
 describe('events', () => {
-  const { patch, createElement } = mg.init([mg.events()])
+  const { patch, createElement } = mg.init([mg.modules.events()])
 
   it('without params', () => {
     let isOn = false

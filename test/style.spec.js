@@ -2,7 +2,7 @@ import mg, { h } from '../src/amber-dom'
 
 
 describe('style', () => {
-  const { patch, createElement } = mg.init([mg.style()])
+  const { patch, createElement } = mg.init([mg.modules.style()])
 
   it('add style using object literal', () => {
     let elem = createElement(h('div', {style: {fontSize: '12px'}}))

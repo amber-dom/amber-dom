@@ -7,12 +7,14 @@ function bundle({ inp, outp, fm, outName }) {
   const writer = outName === void 0
     ? (bundle) => {
         return bundle.write({
+          exports: 'named',
           file: outp,
           format: fm
         })
       }
     : (bundle) => {
         return bundle.write({
+          exports: 'named',
           file: outp,
           format: fm,
           name: outName

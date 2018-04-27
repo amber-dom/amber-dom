@@ -19,7 +19,7 @@ function renderWithCustomKey(list) {
  */
 describe('amber-dom', () => {
 
-  const { patch, createElement } = mg.init(mg.defaultModules())
+  const { patch, createElement } = mg.init(mg.modules.all())
 
   describe('hyperscript', () => {
     it('can create vnode with element tag', () => {

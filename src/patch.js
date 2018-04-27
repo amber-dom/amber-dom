@@ -95,8 +95,8 @@ function patchAttrs(element, vnode, modules) {
 
   // add new & update attributes.
   for (const name in attrs) {
-    if (!(name in modules) && !(name in oldAttrs) || attrs[name] !== (
-      name === 'value' || name === 'checked' ? element[name] : oldAttrs[name])
+    if (!(name in modules) && (!(name in oldAttrs) || attrs[name] !== (
+      name === 'value' || name === 'checked' ? element[name] : oldAttrs[name]))
     ) {
       setAttribute(element, name, (oldAttrs[name] = attrs[name]));
     }

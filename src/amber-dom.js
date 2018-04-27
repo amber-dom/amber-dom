@@ -4,21 +4,24 @@ import h from './h';
 import patchElem from './patch';
 import createElem from './create-element';
 
+export { default as h } from './h';
+export { default as style } from './modules/style';
+export { default as events } from './modules/events';
+export const modules = {
+  style,
+  events,
+  all() {
+    return [ style(), events() ];
+  }
+}
 
 export default {
   h,
   init,
-  style,
-  events,
   patchElem,
   createElem,
-  
-  defaultModules: function defaultModules() {
-    return [style(), events()];
-  }
+  modules
 }
-
-export { default as h } from './h';
 
 /**
  * Initialize modules.

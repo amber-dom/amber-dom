@@ -512,7 +512,7 @@ function patchAttrs(element, vnode, modules) {
 
   // add new & update attributes.
   for (var _name in attrs) {
-    if (!(_name in modules) && !(_name in oldAttrs) || attrs[_name] !== (_name === 'value' || _name === 'checked' ? element[_name] : oldAttrs[_name])) {
+    if (!(_name in modules) && (!(_name in oldAttrs) || attrs[_name] !== (_name === 'value' || _name === 'checked' ? element[_name] : oldAttrs[_name]))) {
       setAttribute(element, _name, oldAttrs[_name] = attrs[_name]);
     }
   }
@@ -709,24 +709,26 @@ function createKeyMap(children, start, end) {
   return keyedChildren;
 }
 
-var amberDom = {
-  h: h,
-  init: init,
+var modules = {
   style: style,
   events: events,
-  patchElem: patch,
-  createElem: create,
-
-  defaultModules: function defaultModules() {
+  all: function all() {
     return [style(), events()];
   }
 };
 
-/**
- * Initialize modules.
- * @param {Array|Object|null} mods an array of modules.
- */
-function init(mods) {
+var amberDom = {
+  h: h,
+  init: init,
+  patchElem: patch,
+  createElem: create,
+  modules: modules
+
+  /**
+   * Initialize modules.
+   * @param {Array|Object|null} mods an array of modules.
+   */
+};function init(mods) {
   var modules = {};
 
   mods || (mods = []);
@@ -795,4 +797,4 @@ function errMsg(mod) {
 }
 
 export default amberDom;
-export { init, h };
+export { modules, init, h, style, events };

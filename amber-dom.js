@@ -165,7 +165,8 @@ var amberDOM = (function (exports) {
     attrs || (attrs = {});
     children || (children = []);
 
-    var ns = attrs.namespace || (svgRe.test(tagName) ? SVG_NS : void 0);
+    var i = void 0,
+        ns = attrs.namespace || (svgRe.test(tagName) ? SVG_NS : void 0);
     var vnode = {
       tagName: !!ns ? tagName : tagName.toUpperCase(),
       attrs: attrs,
@@ -176,6 +177,8 @@ var amberDOM = (function (exports) {
 
     // set up namespace.
     ns && addNS(vnode, ns);
+    (i = attrs.hooks) && (i = i.init) && i(vnode);
+
     return vnode;
   }
 
@@ -206,8 +209,9 @@ var amberDOM = (function (exports) {
         i = void 0;
 
     for (var name in modules) {
-      (i = modules[name]) && (i = i.detaching) && i(domNode);
+      (i = modules[name]) && (i = i.unmounting) && i(domNode);
     }
+    (i = domNode.__unmounting__) && i(domNode);
 
     if (parentNode && domNode.parentNode === parentNode) {
       node && parentNode.replaceChild(node, domNode) && (res = node);
@@ -236,7 +240,9 @@ var amberDOM = (function (exports) {
         children = vnode$$1.children,
         elem = ns ? document.createElementNS(ns, tagName) : document.createElement(tagName);
 
-    (i = vnode$$1.hooks) && (i = i.mounted) && mountedNodes.push(elem) && (elem.__mounted__ = i);
+    (i = attrs.hooks) && i.mounted && mountedNodes.push(elem) && (elem.__mounted__ = i.mounted);
+    i && i.updating && (elem.__updating__ = i.updating);
+    i && i.unmounting && (elem.__unmounting__ = i.unmounting);
 
     elem.__attrs__ = {};
     for (var name in attrs) {
@@ -246,15 +252,18 @@ var amberDOM = (function (exports) {
       }
     }
 
+    for (var _name in modules) {
+      (i = modules[_name]) && (i = i.creating) && i(elem, attrs[_name]);
+    }
+    (i = attrs.hooks) && (i = i.creating) && i(elem);
+
     children.forEach(function (child, i) {
       var childElement = void 0;
 
       if (isVnode(child) || typeof child === 'string') {
         childElement = create(modules, child, mountedNodes);
       }
-
       // TODO: add thunk.
-
       else {
           i = childErrMsg(child);
           console.warn(i);
@@ -263,10 +272,6 @@ var amberDOM = (function (exports) {
 
       elem.appendChild(childElement);
     });
-
-    for (var _name in modules) {
-      (i = modules[_name]) && (i = i.creating) && i(elem, attrs[_name]);
-    }
 
     return elem;
   }
@@ -289,6 +294,7 @@ var amberDOM = (function (exports) {
         elem.className = value;
         break;
 
+      case 'hooks':
       case 'namespace':
         break;
 
@@ -375,9 +381,17 @@ var amberDOM = (function (exports) {
         i = void 0;
 
     if (domRoot instanceof Element || domRoot instanceof Text) {
+      for (var name in modules) {
+        (i = modules[name]) && (i = i.prepatch) && i(domRoot, vRoot);
+      }
+
       domRoot = patchElement(modules, domRoot, vRoot);
       while (mounted = mountedNodes.shift()) {
         (i = mounted.__mounted__) && typeof i === 'function' && i(mounted);
+      }
+
+      for (var _name in modules) {
+        (i = modules[_name]) && (i = i.postpacth) && i(domRoot, vRoot);
       }
     }
     return domRoot;
@@ -403,10 +417,13 @@ var amberDOM = (function (exports) {
     // 2. are the same node.
     else if (same || isSameNode(element, vnode$$1)) {
         patchAttrs(modules, element, vnode$$1);
-        patchChildren(modules, element, vnode$$1);
+
         for (var name in modules) {
           (i = modules[name]) && (i = i.updating) && i(element, vnode$$1.attrs[name]);
         }
+        (i = element.__updating__) && i(element);
+
+        patchChildren(modules, element, vnode$$1);
       }
 
       // 3. not the same node.
@@ -453,9 +470,9 @@ var amberDOM = (function (exports) {
     }
 
     // add new & update attributes.
-    for (var _name in attrs) {
-      if (!(_name in modules) && (!(_name in oldAttrs) || attrs[_name] !== (_name === 'value' || _name === 'checked' ? element[_name] : oldAttrs[_name]))) {
-        setAttribute(element, _name, oldAttrs[_name] = attrs[_name]);
+    for (var _name2 in attrs) {
+      if (!(_name2 in modules) && (!(_name2 in oldAttrs) || attrs[_name2] !== (_name2 === 'value' || _name2 === 'checked' ? element[_name2] : oldAttrs[_name2]))) {
+        setAttribute(element, _name2, oldAttrs[_name2] = attrs[_name2]);
       }
     }
   }

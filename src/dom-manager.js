@@ -23,8 +23,9 @@ export function remove(modules, parentNode, domNode, node) {
   let res, i;
 
   for (const name in modules) {
-    (i = modules[name]) && (i = i.detaching) && i(domNode);
+    (i = modules[name]) && (i = i.unmounting) && i(domNode);
   }
+  (i = domNode.__unmounting__) && i(domNode);
 
   if (parentNode && domNode.parentNode === parentNode) {
     node && parentNode.replaceChild(node, domNode) && (res = node);
@@ -58,7 +59,9 @@ export function create(modules, vnode, mountedNodes) {
           ? document.createElementNS(ns, tagName)
           : document.createElement(tagName);
 
-  (i = vnode.hooks) && (i = i.mounted) && (mountedNodes.push(elem)) && (elem.__mounted__ = i);
+  (i = attrs.hooks) && (i.mounted) && (mountedNodes.push(elem)) && (elem.__mounted__ = i.mounted);
+  i && (i.updating) && (elem.__updating__ = i.updating);
+  i && (i.unmounting) && (elem.__unmounting__ = i.unmounting);
 
   elem.__attrs__ = {};
   for (const name in attrs) {
@@ -68,15 +71,18 @@ export function create(modules, vnode, mountedNodes) {
     }
   }
 
+  for (const name in modules) {
+    (i = modules[name]) && (i = i.creating) && (i(elem, attrs[name]));
+  }
+  (i = attrs.hooks) && (i = i.creating) && i(elem);
+
   children.forEach((child, i) => {
     let childElement;
 
     if (isVnode(child) || typeof child === 'string') {
       childElement = create(modules, child, mountedNodes);
     }
-
     // TODO: add thunk.
-
     else {
       i = childErrMsg(child);
       console.warn(i);
@@ -85,10 +91,6 @@ export function create(modules, vnode, mountedNodes) {
 
     elem.appendChild(childElement);
   });
-
-  for (const name in modules) {
-    (i = modules[name]) && (i = i.creating) && (i(elem, attrs[name]));
-  }
 
   return elem;
 }
@@ -110,6 +112,7 @@ export function setAttribute(elem, name, value) {
       elem.className = value;
       break;
 
+    case 'hooks':
     case 'namespace':
       break;
 

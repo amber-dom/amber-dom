@@ -28,7 +28,7 @@ export function vnode(tagName, attrs, children) {
   (attrs || (attrs = {}));
   (children || (children = []));
 
-  let ns = (attrs.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
+  let i, ns = (attrs.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
   let vnode = {
     tagName: !!ns ? tagName : tagName.toUpperCase(),
     attrs: attrs,
@@ -39,6 +39,8 @@ export function vnode(tagName, attrs, children) {
 
   // set up namespace.
   ns && addNS(vnode, ns);
+  (i = attrs.hooks) && (i = i.init) && i(vnode);
+  
   return vnode;
 }
 

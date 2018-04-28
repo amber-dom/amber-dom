@@ -18,9 +18,17 @@ function patch(modules, domRoot, vRoot) {
   let mounted, i;
 
   if (domRoot instanceof Element || domRoot instanceof Text) {
+    for (const name in modules) {
+      (i = modules[name]) && (i = i.prepatch) && i(domRoot, vRoot);
+    }
+
     domRoot = patchElement(modules, domRoot, vRoot);
     while((mounted = mountedNodes.shift())) {
       (i = mounted.__mounted__) && (typeof i === 'function') && i(mounted);
+    }
+
+    for (const name in modules) {
+      (i = modules[name]) && (i = i.postpacth) && i(domRoot, vRoot);
     }
   }
   return domRoot;
@@ -49,10 +57,13 @@ function patchElement(modules, element, vnode, same) {
   // 2. are the same node.
   else if (same || isSameNode(element, vnode)) {
     patchAttrs(modules, element, vnode);
-    patchChildren(modules, element, vnode);
+    
     for (const name in modules) {
       (i = modules[name]) && (i = i.updating) && (i(element, vnode.attrs[name]));
     }
+    (i = element.__updating__) && i(element);
+
+    patchChildren(modules, element, vnode);
   }
 
   // 3. not the same node.

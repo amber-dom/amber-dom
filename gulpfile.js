@@ -3,7 +3,7 @@ const rollup = require('rollup')
 const babel = require('rollup-plugin-babel')
 const uglify = require('rollup-plugin-uglify')
 
-const moduleNames = ['style', 'events']
+const moduleNames = ['style', 'events', 'dataset']
 
 function bundle({ inp, outp, fm, outName }) {
   const writer = outName === void 0

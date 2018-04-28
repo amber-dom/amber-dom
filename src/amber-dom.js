@@ -45,12 +45,19 @@ export function init(mods) {
   }
 
   return {
-    patch: function patch(elem, vnode) {
-      return patchElem(elem, vnode, modules);
+    patch(elem, vnode) {
+      return patchElem(modules, elem, vnode);
     },
 
-    createElement: function createElement(vnode) {
-      return createElem(vnode, modules);
+    createElement(vnode) {
+      let mountedNodes = [];
+      let root = createElem(modules, vnode, mountedNodes);
+      let mounted, i;
+
+      while((mounted = mountedNodes.shift())) {
+        (i = mounted.__mounted__) && (typeof i === 'function') && i(mounted);
+      }
+      return root;
     }
   }
 }
@@ -61,7 +68,7 @@ function isMod(obj) {
 
 function errMsg(mod) {
   if (mod == null)
-    return 'Given a null or undefined object as module.';
+    return 'Given a null or undefined as module.';
   
   let msg = 'Unrecognized module: \n{\n';
   let fields = []
@@ -70,6 +77,10 @@ function errMsg(mod) {
 
   msg += fields.join(',\n\n');
   msg += '\n}\n';
-  msg += 'A module must contain a a string name.'
+  if (typeof mod === 'function') {
+    msg += 'Did you just pass in a module generator function?';
+  } else {
+    msg += 'A module must contain a a string name.';
+  }
   return msg;
 }

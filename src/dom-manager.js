@@ -19,8 +19,12 @@ export function insertBefore(parentNode, node, domNode) {
  * @param {Element} domNode the node to be removed.
  * @param {Element} node Optional replacement of `domNode`.
  */
-export function remove(parentNode, domNode, node) {
-  let res;
+export function remove(modules, parentNode, domNode, node) {
+  let res, i;
+
+  for (const name in modules) {
+    (i = modules[name]) && (i = i.detaching) && i(domNode);
+  }
 
   if (parentNode && domNode.parentNode === parentNode) {
     node && parentNode.replaceChild(node, domNode) && (res = node);
@@ -39,7 +43,7 @@ export function remove(parentNode, domNode, node) {
  * @param {String|Number|Object} vnode a virtual node.
  * @param {Object} modules a hash of module, with keys equal module names.
  */
-export function create(vnode, modules) {
+export function create(modules, vnode, mountedNodes) {
   if (vnode == null)  return null;
 
   if (typeof vnode === 'string' || typeof vnode === 'number')
@@ -54,6 +58,7 @@ export function create(vnode, modules) {
           ? document.createElementNS(ns, tagName)
           : document.createElement(tagName);
 
+  (i = vnode.hooks) && (i = i.mounted) && (mountedNodes.push(elem)) && (elem.__mounted__ = i);
 
   elem.__attrs__ = {};
   for (const name in attrs) {
@@ -67,7 +72,7 @@ export function create(vnode, modules) {
     let childElement;
 
     if (isVnode(child) || typeof child === 'string') {
-      childElement = create(child, modules);
+      childElement = create(modules, child, mountedNodes);
     }
 
     // TODO: add thunk.
@@ -146,15 +151,15 @@ export function setAttribute(elem, name, value) {
  * Remove from the last child might cause less repaint and reflow.
  * @param {Element} elem
  */
-export function emptyChildren(elem) {
+export function emptyChildren(modules, elem) {
   if (elem && elem.childNodes && elem.childNodes.length) {
     let fc = elem.firstChild, lc = elem.lastChild;
 
     while(fc !== lc) {
-      remove(elem, lc);
+      remove(modules, elem, lc);
       lc = elem.lastChild;
     }
-    remove(elem, fc);
+    remove(modules, elem, fc);
   }
 }
 

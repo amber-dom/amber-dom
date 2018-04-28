@@ -201,8 +201,13 @@ var amberDOM = (function (exports) {
    * @param {Element} domNode the node to be removed.
    * @param {Element} node Optional replacement of `domNode`.
    */
-  function remove(parentNode, domNode, node) {
-    var res = void 0;
+  function remove(modules, parentNode, domNode, node) {
+    var res = void 0,
+        i = void 0;
+
+    for (var name in modules) {
+      (i = modules[name]) && (i = i.detaching) && i(domNode);
+    }
 
     if (parentNode && domNode.parentNode === parentNode) {
       node && parentNode.replaceChild(node, domNode) && (res = node);
@@ -219,7 +224,7 @@ var amberDOM = (function (exports) {
    * @param {String|Number|Object} vnode a virtual node.
    * @param {Object} modules a hash of module, with keys equal module names.
    */
-  function create(vnode$$1, modules) {
+  function create(modules, vnode$$1, mountedNodes) {
     if (vnode$$1 == null) return null;
 
     if (typeof vnode$$1 === 'string' || typeof vnode$$1 === 'number') return document.createTextNode(vnode$$1);
@@ -230,6 +235,8 @@ var amberDOM = (function (exports) {
         tagName = vnode$$1.tagName,
         children = vnode$$1.children,
         elem = ns ? document.createElementNS(ns, tagName) : document.createElement(tagName);
+
+    (i = vnode$$1.hooks) && (i = i.mounted) && mountedNodes.push(elem) && (elem.__mounted__ = i);
 
     elem.__attrs__ = {};
     for (var name in attrs) {
@@ -243,7 +250,7 @@ var amberDOM = (function (exports) {
       var childElement = void 0;
 
       if (isVnode(child) || typeof child === 'string') {
-        childElement = create(child, modules);
+        childElement = create(modules, child, mountedNodes);
       }
 
       // TODO: add thunk.
@@ -323,16 +330,16 @@ var amberDOM = (function (exports) {
    * Remove from the last child might cause less repaint and reflow.
    * @param {Element} elem
    */
-  function emptyChildren(elem) {
+  function emptyChildren(modules, elem) {
     if (elem && elem.childNodes && elem.childNodes.length) {
       var fc = elem.firstChild,
           lc = elem.lastChild;
 
       while (fc !== lc) {
-        remove(elem, lc);
+        remove(modules, elem, lc);
         lc = elem.lastChild;
       }
-      remove(elem, fc);
+      remove(modules, elem, fc);
     }
   }
 
@@ -357,13 +364,21 @@ var amberDOM = (function (exports) {
     return msg;
   }
 
+  var mountedNodes = [];
+
   /**
    * @param {Element|Text} domRoot 
    * @param {Object} vRoot a vnode tree root.
    */
-  function patch(domRoot, vRoot, modules) {
+  function patch(modules, domRoot, vRoot) {
+    var mounted = void 0,
+        i = void 0;
+
     if (domRoot instanceof Element || domRoot instanceof Text) {
-      domRoot = patchElement(domRoot, vRoot, modules);
+      domRoot = patchElement(modules, domRoot, vRoot);
+      while (mounted = mountedNodes.shift()) {
+        (i = mounted.__mounted__) && typeof i === 'function' && i(mounted);
+      }
     }
     return domRoot;
   }
@@ -374,7 +389,7 @@ var amberDOM = (function (exports) {
    * @param {Object} vnode a vnode object. 
    * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
    */
-  function patchElement(element, vnode$$1, modules, same) {
+  function patchElement(modules, element, vnode$$1, same) {
     if (vnode$$1 == null || typeof vnode$$1 === 'boolean') vnode$$1 = '';
 
     var i = void 0;
@@ -387,8 +402,8 @@ var amberDOM = (function (exports) {
 
     // 2. are the same node.
     else if (same || isSameNode(element, vnode$$1)) {
-        patchAttrs(element, vnode$$1, modules);
-        patchChildren(element, vnode$$1, modules);
+        patchAttrs(modules, element, vnode$$1);
+        patchChildren(modules, element, vnode$$1);
         for (var name in modules) {
           (i = modules[name]) && (i = i.updating) && i(element, vnode$$1.attrs[name]);
         }
@@ -396,9 +411,9 @@ var amberDOM = (function (exports) {
 
       // 3. not the same node.
       else {
-          var node = create(vnode$$1, modules);
+          var node = create(modules, vnode$$1, mountedNodes);
           // replace the `element` with `node`.
-          element = remove(element.parentNode, element, node);
+          element = remove(modules, element.parentNode, element, node);
         }
 
     return element;
@@ -418,7 +433,7 @@ var amberDOM = (function (exports) {
    * @param {Element} element 
    * @param {Object} vnode 
    */
-  function patchAttrs(element, vnode$$1, modules) {
+  function patchAttrs(modules, element, vnode$$1) {
     var attrs = vnode$$1.attrs,
         oldAttrs = element.__attrs__;
 
@@ -450,7 +465,7 @@ var amberDOM = (function (exports) {
    * @param {Element} element 
    * @param {Object} vnode 
    */
-  function patchChildren(element, vnode$$1, modules) {
+  function patchChildren(modules, element, vnode$$1) {
     var oldChildren = element.childNodes,
         vChildren = vnode$$1.children,
         oldLen = oldChildren.length,
@@ -467,12 +482,12 @@ var amberDOM = (function (exports) {
             elemToMove = void 0;
 
         if (oldLen === 1 && isSameNode(oldChildren[0], ch)) {
-          patchElement(oldChildren[0], ch, modules, true);
+          patchElement(modules, oldChildren[0], ch, true);
         } else {
           // Try to find a child node that match.
           for (var i = 1; i < oldLen; i++) {
             if (isSameNode(oldChildren[i], ch)) {
-              patchElement(oldChildren[i], ch, modules, true);
+              patchElement(modules, oldChildren[i], ch, true);
 
               elemToMove = oldChildren[i];
               break;
@@ -481,9 +496,9 @@ var amberDOM = (function (exports) {
 
           // If it wasn't found, create one from the vnode.
           if (elemToMove === void 0) {
-            elemToMove = create(ch, modules);
+            elemToMove = create(modules, ch, mountedNodes);
           }
-          emptyChildren(element);
+          emptyChildren(modules, element);
           element.appendChild(elemToMove);
         }
       }
@@ -501,14 +516,14 @@ var amberDOM = (function (exports) {
 
           while (vStart <= vEnd && oldStartCh !== oldEndCh) {
             while (vStart <= vEnd && oldStartCh !== oldEndCh && oldStartCh && vStartCh && isSameNode(oldStartCh, vStartCh)) {
-              patchElement(oldStartCh, vStartCh, modules, true);
+              patchElement(modules, oldStartCh, vStartCh, true);
 
               oldStartCh = oldStartCh.nextSibling;
               vStartCh = vChildren[++vStart];
             }
 
             while (vStart <= vEnd && oldStartCh !== oldEndCh && oldEndCh && vEndCh && isSameNode(oldEndCh, vEndCh)) {
-              patchElement(oldEndCh, vEndCh, modules, true);
+              patchElement(modules, oldEndCh, vEndCh, true);
 
               oldEndCh = oldEndCh.previousSibling;
               vEndCh = vChildren[--vEnd];
@@ -519,7 +534,7 @@ var amberDOM = (function (exports) {
 
             // Reorder corner case 1.
             if (isSameNode(oldStartCh, vEndCh)) {
-              patchElement(oldStartCh, vEndCh, modules, true);
+              patchElement(modules, oldStartCh, vEndCh, true);
               _elemToMove = oldStartCh;
               oldStartCh = oldStartCh.nextSibling;
               // place it right behind oldEndCh.
@@ -530,7 +545,7 @@ var amberDOM = (function (exports) {
 
             // Reorder corner case 2.
             else if (isSameNode(oldEndCh, vStartCh)) {
-                patchElement(oldEndCh, vStartCh, modules, true);
+                patchElement(modules, oldEndCh, vStartCh, true);
                 _elemToMove = oldEndCh;
                 oldEndCh = oldEndCh.previousSibling;
                 // place it right in front of oldStartCh.
@@ -550,13 +565,13 @@ var amberDOM = (function (exports) {
 
                   // not found. Create a new child.
                   if (_elemToMove == null) {
-                    _elemToMove = create(vStartCh, modules);
+                    _elemToMove = create(modules, vStartCh, mountedNodes);
                     // place it right in front of oldStartCh
                     insertBefore(element, _elemToMove, oldStartCh);
                   }
                   // found. Move it to its place.
                   else {
-                      patchElement(_elemToMove, startChild, modules);
+                      patchElement(modules, _elemToMove, startChild);
                       keyedChildren[_elemToMove.key] = void 0;
                       // place it right in front of oldStartCh
                       insertBefore(element, _elemToMove, oldStartCh);
@@ -572,11 +587,11 @@ var amberDOM = (function (exports) {
             while (oldStartCh !== oldEndCh) {
               _elemToMove = oldStartCh;
               oldStartCh = oldStartCh.nextSibling;
-              remove(element, _elemToMove);
+              remove(modules, element, _elemToMove);
             }
 
             if (isSameNode(oldEndCh, vChildren[vEnd])) {
-              patchElement(oldEndCh, vChildren[vEnd], modules, true);
+              patchElement(modules, oldEndCh, vChildren[vEnd], true);
               if (vStart === vEnd) {
                 return;
               }
@@ -584,26 +599,26 @@ var amberDOM = (function (exports) {
             } else {
               _elemToMove = oldEndCh;
               oldEndCh = oldEndCh.nextSibling;
-              remove(element, _elemToMove);
+              remove(modules, element, _elemToMove);
             }
 
             // append new children if there's any.
             for (var _i = vStart; _i <= vEnd; _i++) {
-              insertBefore(element, create(vChildren[_i], modules), oldEndCh);
+              insertBefore(element, create(modules, vChildren[_i], mountedNodes), oldEndCh);
             }
           }
         }
 
         // case 2: remove all DOM children.
         else if (oldLen !== 0) {
-            emptyChildren(element);
+            emptyChildren(modules, element);
           }
 
           // case 3: insert new DOM children.
           else if (vLen !== 0) {
 
               for (var _i2 = 0, _newCh = vChildren[0]; _i2 < vLen; _i2++, _newCh = vChildren[_i2]) {
-                element.appendChild(create(_newCh, modules));
+                element.appendChild(create(modules, _newCh, mountedNodes));
               }
             }
   }
@@ -798,11 +813,18 @@ var amberDOM = (function (exports) {
 
     return {
       patch: function patch$$1(elem, vnode) {
-        return patch(elem, vnode, modules);
+        return patch(modules, elem, vnode);
       },
-
       createElement: function createElement(vnode) {
-        return create(vnode, modules);
+        var mountedNodes = [];
+        var root = create(modules, vnode, mountedNodes);
+        var mounted = void 0,
+            i = void 0;
+
+        while (mounted = mountedNodes.shift()) {
+          (i = mounted.__mounted__) && typeof i === 'function' && i(mounted);
+        }
+        return root;
       }
     };
   }
@@ -812,7 +834,7 @@ var amberDOM = (function (exports) {
   }
 
   function errMsg(mod) {
-    if (mod == null) return 'Given a null or undefined object as module.';
+    if (mod == null) return 'Given a null or undefined as module.';
 
     var msg = 'Unrecognized module: \n{\n';
     var fields = [];
@@ -820,7 +842,11 @@ var amberDOM = (function (exports) {
       fields.push('\t' + name + ': ' + mod[name]);
     }msg += fields.join(',\n\n');
     msg += '\n}\n';
-    msg += 'A module must contain a a string name.';
+    if (typeof mod === 'function') {
+      msg += 'Did you just pass in a module generator function?';
+    } else {
+      msg += 'A module must contain a a string name.';
+    }
     return msg;
   }
 

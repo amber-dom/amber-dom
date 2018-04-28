@@ -1,8 +1,8 @@
-import { h, init, modules } from '../src/amber-dom'
-
+import { h, init } from '../src/amber-dom'
+import style from '../src/modules/style'
 
 describe('style', () => {
-  const { patch, createElement } = init([modules.style()])
+  const { patch, createElement } = init([style()])
 
   it('add style using object literal', () => {
     let elem = createElement(h('div', {style: {fontSize: '12px'}}))

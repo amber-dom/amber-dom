@@ -1,5 +1,5 @@
-import { h, init, modules } from '../src/amber-dom'
-
+import { h, init } from '../src/amber-dom'
+import events from '../src/modules/events'
 
 function renderClickButton(clickHandler) {
   return h('button', {
@@ -19,7 +19,7 @@ function rClickMOBtn(handlers) {
 }
 
 describe('events', () => {
-  const { patch, createElement } = init([modules.events()])
+  const { patch, createElement } = init([events()])
 
   it('without params', () => {
     let isOn = false

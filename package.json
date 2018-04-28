@@ -2,8 +2,9 @@
   "name": "amber-dom",
   "version": "0.0.8",
   "description": "A lightweight virtual dom library.",
-  "main": "index.js",
-  "module": "amber-dom.esm.js",
+  "main": "commonjs/amber-dom.common.js",
+  "browser": "browser/amber-dom.browser.js",
+  "module": "amber-dom.js",
   "scripts": {
     "build": "gulp default",
     "dev": "export NODE_ENV=development && karma start --browsers Chrome",

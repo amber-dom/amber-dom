@@ -1,21 +1,7 @@
-import events from './modules/events';
-import style from './modules/style';
-import dataset from './modules/dataset';
 import patchElem from './patch';
 import createElem from './create-element';
 
 export { default as h } from './h';
-export const modules = {
-  style,
-  events,
-  dataset,
-  all() {
-    return [
-      style(),
-      events(),
-      dataset() ];
-  }
-}
 
 /**
  * Initialize modules.

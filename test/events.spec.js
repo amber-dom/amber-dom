@@ -1,4 +1,4 @@
-import mg, { h } from '../src/amber-dom'
+import { h, init, modules } from '../src/amber-dom'
 
 
 function renderClickButton(clickHandler) {
@@ -19,7 +19,7 @@ function rClickMOBtn(handlers) {
 }
 
 describe('events', () => {
-  const { patch, createElement } = mg.init([mg.modules.events()])
+  const { patch, createElement } = init([modules.events()])
 
   it('without params', () => {
     let isOn = false

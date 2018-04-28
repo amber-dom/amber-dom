@@ -1,10 +1,9 @@
-import VNode from './vnode';
+import { vnode, isVnode } from './vnode';
 import { 
   setAttribute,
   insertBefore,
   create,
   remove,
-  append,
   emptyChildren } from "./dom-manager";
 
 export default patch;
@@ -12,7 +11,7 @@ export default patch;
 
 /**
  * @param {Element|Text} domRoot 
- * @param {VNode} vRoot 
+ * @param {Object} vRoot a vnode tree root.
  */
 function patch(domRoot, vRoot, modules) {
   if (domRoot instanceof Element || domRoot instanceof Text) {
@@ -25,7 +24,7 @@ function patch(domRoot, vRoot, modules) {
 /**
  * Patch a DOM node with a vnode.
  * @param {Element|Text} element 
- * @param {VNode} vnode 
+ * @param {Object} vnode a vnode object. 
  * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
  */
 function patchElement(element, vnode, modules, same) {
@@ -63,7 +62,7 @@ function patchElement(element, vnode, modules, same) {
 /**
  * See if 2 nodes are the same.
  * @param {Element|Text} element 
- * @param {VNode} vnode 
+ * @param {Object} vnode 
  */
 function isSameNode(element, vnode) {
   return element.__key__ === vnode.key && element.tagName === vnode.tagName;
@@ -72,7 +71,7 @@ function isSameNode(element, vnode) {
 /**
  * Patch 2 same nodes.
  * @param {Element} element 
- * @param {VNode} vnode 
+ * @param {Object} vnode 
  */
 function patchAttrs(element, vnode, modules) {
   let attrs = vnode.attrs,
@@ -106,7 +105,7 @@ function patchAttrs(element, vnode, modules) {
 /**
  * Patch an element's children
  * @param {Element} element 
- * @param {VNode} vnode 
+ * @param {Object} vnode 
  */
 function patchChildren(element, vnode, modules) {
   const oldChildren = element.childNodes,

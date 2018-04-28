@@ -1,4 +1,4 @@
-import mg, { h } from '../src/amber-dom';
+import { h, init, modules } from '../src/amber-dom';
 
 
 /** Use for testing patching. Assume no dupplicate item. */
@@ -19,7 +19,7 @@ function renderWithCustomKey(list) {
  */
 describe('amber-dom', () => {
 
-  const { patch, createElement } = mg.init(mg.modules.all())
+  const { patch, createElement } = init(modules.all())
 
   describe('hyperscript', () => {
     it('can create vnode with element tag', () => {

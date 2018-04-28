@@ -1,4 +1,4 @@
-import VNode from './vnode';
+import { vnode, isVnode } from './vnode';
 export default h;
 
 
@@ -57,7 +57,7 @@ function h(selector, attrs) {
   }
 
   // if attrs is any of these below, it must be a child.
-  if ((attrs instanceof VNode) ||
+  if (isVnode(attrs) ||
     (typeof attrs === 'string') ||
     (typeof attrs === 'number') ||
     (typeof attrs === 'boolean') ||
@@ -84,7 +84,7 @@ function h(selector, attrs) {
       }
 
       else {
-        if (child instanceof VNode && (child.attrs.key == null)) {
+        if (isVnode(child) && (child.attrs.key == null)) {
           child.key = child.attrs.key = idxKey++;
         }
         children.push(child);
@@ -111,7 +111,7 @@ function h(selector, attrs) {
       attrs.id = attrs.id ? attrs.id : tagInfo.id;
     }
 
-    return new VNode(tagInfo.tagName, attrs, children);
+    return vnode(tagInfo.tagName, attrs, children);
   }
   
   else {

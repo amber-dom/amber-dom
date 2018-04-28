@@ -1,22 +1,13 @@
-import VNode from './vnode';
+import { vnode, isVnode } from './vnode';
 
 
 const xlinkRe = /^xlink:(.*)$/;
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
 
-
-/**
- * @param {Element} parentNode 
- * @param {Element} node 
- */
-export function append(parentNode, node) {
-  parentNode.appendChild(node);
-}
-
 /**
  * @param {Element} parentNode
- * @param {Element} node 
- * @param {Element} domNode the reference node.
+ * @param {Element|TextNode} node 
+ * @param {Element|TextNode} domNode the reference node.
  */
 export function insertBefore(parentNode, node, domNode) {
   parentNode.insertBefore(node, domNode);
@@ -45,7 +36,7 @@ export function remove(parentNode, domNode, node) {
 
 /**
  * Create a DOM node represented by `vnode`
- * @param {String|Number|VNode} vnode a virtual node.
+ * @param {String|Number|Object} vnode a virtual node.
  * @param {Object} modules a hash of module, with keys equal module names.
  */
 export function create(vnode, modules) {
@@ -75,7 +66,7 @@ export function create(vnode, modules) {
   children.forEach((child, i) => {
     let childElement;
 
-    if (child instanceof VNode || typeof child === 'string') {
+    if (isVnode(child) || typeof child === 'string') {
       childElement = create(child, modules);
     }
 

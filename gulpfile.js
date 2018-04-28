@@ -3,6 +3,8 @@ const rollup = require('rollup')
 const babel = require('rollup-plugin-babel')
 const uglify = require('rollup-plugin-uglify')
 
+const moduleNames = ['style', 'events']
+
 function bundle({ inp, outp, fm, outName }) {
   const writer = outName === void 0
     ? (bundle) => {
@@ -59,8 +61,19 @@ gulp.task('build:browser', () => {
   })
 })
 
+gulp.task('build:modules:es', () => {
+  for (const name of moduleNames) {
+    bundle({
+      inp: `./src/modules/${name}.js`,
+      outp: `./modules/${name}.js`,
+      fm: 'es'
+    })
+  }
+})
+
 gulp.task('default', [
   'build:es',
   'build:cjs',
-  'build:browser'
+  'build:browser',
+  'build:modules:es'
 ])

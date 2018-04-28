@@ -7,12 +7,6 @@ var amberDOM = (function (exports) {
     return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
-  var classCallCheck = function (instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  };
-
   var toConsumableArray = function (arr) {
     if (Array.isArray(arr)) {
       for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
@@ -113,7 +107,7 @@ var amberDOM = (function (exports) {
 
   /**
    * Add namespace for `vnode` and recursively add it to its children.
-   * @param {VNode} vnode A vnode.
+   * @param {Object} vnode A vnode.
    * @param {String} ns A namespace.
    */
   function addNS(vnode, ns) {
@@ -123,140 +117,37 @@ var amberDOM = (function (exports) {
     for (var i = 0, len = children.length; i < len; i++) {
       var child = children[i];
 
-      if (child instanceof VNode && child.tagName !== 'foreignObject') {
+      if (isVnode(child) && child.tagName !== 'foreignObject') {
         addNS(child, ns);
       }
     }
   }
 
-  var VNode =
   /**
    * @param {String} tagName a tag name. Must be specified.
    * @param {Object|null} attrs attributes to set on DOM.
    * @param {Array|null} children can be an empty array.
    */
-  function VNode(tagName, attrs, children) {
-    classCallCheck(this, VNode);
-
+  function vnode(tagName, attrs, children) {
     attrs || (attrs = {});
     children || (children = []);
 
     var ns = attrs.namespace || (svgRe.test(tagName) ? SVG_NS : void 0);
-
-    this.tagName = !!ns ? tagName : tagName.toUpperCase();
-    this.attrs = attrs;
-    this.key = attrs.key;
-    this.children = children;
+    var vnode = {
+      tagName: !!ns ? tagName : tagName.toUpperCase(),
+      attrs: attrs,
+      key: attrs.key,
+      children: children,
+      isVnode: true
+    };
 
     // set up namespace.
-    ns && addNS(this, ns);
-  };
-
-  var classIdSpliter = /([\.#]?[^\s#.]+)/;
-  var stack = []; // internal stack for parsing children.
-
-  /**
-   * A selector might contain a tag name followed by some CSS selector.
-   * This function was stripped and modiffied from hyperscript's  parseClass.
-   * @see https://github.com/hyperhype/hyperscript/blob/master/index.js
-   * @param {String} selector 
-   */
-  function parseSelector(selector) {
-    var parts = selector.split(classIdSpliter);
-    var result = {};
-
-    parts.forEach(function (part) {
-      if (part === '') return;
-
-      if (!result.tagName) {
-        result.tagName = part;
-      } else if (part[0] === '.') {
-        (result.className || (result.className = [])).push(part.substr(1));
-      } else if (part[0] === '#') {
-        result.id = part.substr(1);
-      }
-    });
-
-    result.className && (result.className = result.className.join(' '));
-    return result;
+    ns && addNS(vnode, ns);
+    return vnode;
   }
 
-  /**
-   * Original propto: h(selector, props, ...children).
-   * 
-   * @param {String|Function} selector a built-in tag name or custom function that returns an object created by h.
-   * @param {Object} attrs optional. any style, event listeners, and className should be put here.
-   * @param {*} rest optional children. Can be nested.
-   */
-  function h(selector, attrs) {
-    // Case 1: `selector` is a function.
-    if (typeof selector === 'function') {
-      // use `new` in case it is a class.
-      return new (Function.prototype.bind.apply(selector, [null].concat(toConsumableArray(Array.prototype.slice.call(arguments, 1)))))();
-    }
-
-    var tagInfo = void 0,
-        children = [],
-        child = void 0,
-        lastPrimitive = false;
-
-    attrs || (attrs = {});
-
-    // collect children
-    for (var i = arguments.length; i-- > 2;) {
-      stack.push(arguments[i]);
-    }
-
-    // if attrs is any of these below, it must be a child.
-    if (attrs instanceof VNode || typeof attrs === 'string' || typeof attrs === 'number' || typeof attrs === 'boolean' || attrs.pop != null) {
-      stack.push(attrs);
-      attrs = {};
-    }
-
-    // handle nested children if there's any.
-    var idxKey = 0;
-    while (stack.length) {
-      if ((child = stack.pop()) && child.pop !== void 0) {
-        for (var _i = child.length; _i--;) {
-          stack.push(child[_i]);
-        }
-      } else {
-        child = child == null ? '' : child;
-        child = typeof child === 'boolean' ? '' : child;
-        child = typeof child === 'number' ? String(child) : child;
-
-        if (lastPrimitive && typeof child === 'string') {
-          children[children.length - 1] += child;
-        } else {
-          if (child instanceof VNode && child.attrs.key == null) {
-            child.key = child.attrs.key = idxKey++;
-          }
-          children.push(child);
-          lastPrimitive = typeof child === 'string' ? true : false;
-        }
-      }
-    }
-
-    // Case 2: `selector` is 'text'. 
-    if (selector === 'text') {
-      return children.length === 0 ? '' : children.join('');
-    }
-
-    // Case 3: `selector` is a selector.
-    else if (typeof selector === 'string') {
-        tagInfo = parseSelector(selector);
-        if (tagInfo.className) {
-          attrs._className = tagInfo.className;
-        }
-
-        if (tagInfo.id) {
-          attrs.id = attrs.id ? attrs.id : tagInfo.id;
-        }
-
-        return new VNode(tagInfo.tagName, attrs, children);
-      } else {
-        throw new Error('Unrecognized selector: ' + selector + '.');
-      }
+  function isVnode(vnode) {
+    return vnode && vnode.tagName && vnode.isVnode === true;
   }
 
   var xlinkRe = /^xlink:(.*)$/;
@@ -264,8 +155,8 @@ var amberDOM = (function (exports) {
 
   /**
    * @param {Element} parentNode
-   * @param {Element} node 
-   * @param {Element} domNode the reference node.
+   * @param {Element|TextNode} node 
+   * @param {Element|TextNode} domNode the reference node.
    */
   function insertBefore(parentNode, node, domNode) {
     parentNode.insertBefore(node, domNode);
@@ -292,19 +183,19 @@ var amberDOM = (function (exports) {
 
   /**
    * Create a DOM node represented by `vnode`
-   * @param {String|Number|VNode} vnode a virtual node.
+   * @param {String|Number|Object} vnode a virtual node.
    * @param {Object} modules a hash of module, with keys equal module names.
    */
-  function create(vnode, modules) {
-    if (vnode == null) return null;
+  function create(vnode$$1, modules) {
+    if (vnode$$1 == null) return null;
 
-    if (typeof vnode === 'string' || typeof vnode === 'number') return document.createTextNode(vnode);
+    if (typeof vnode$$1 === 'string' || typeof vnode$$1 === 'number') return document.createTextNode(vnode$$1);
 
     var i = void 0;
-    var ns = vnode.ns,
-        attrs = vnode.attrs,
-        tagName = vnode.tagName,
-        children = vnode.children,
+    var ns = vnode$$1.ns,
+        attrs = vnode$$1.attrs,
+        tagName = vnode$$1.tagName,
+        children = vnode$$1.children,
         elem = ns ? document.createElementNS(ns, tagName) : document.createElement(tagName);
 
     elem.__attrs__ = {};
@@ -318,7 +209,7 @@ var amberDOM = (function (exports) {
     children.forEach(function (child, i) {
       var childElement = void 0;
 
-      if (child instanceof VNode || typeof child === 'string') {
+      if (isVnode(child) || typeof child === 'string') {
         childElement = create(child, modules);
       }
 
@@ -435,7 +326,7 @@ var amberDOM = (function (exports) {
 
   /**
    * @param {Element|Text} domRoot 
-   * @param {VNode} vRoot 
+   * @param {Object} vRoot a vnode tree root.
    */
   function patch(domRoot, vRoot, modules) {
     if (domRoot instanceof Element || domRoot instanceof Text) {
@@ -447,32 +338,32 @@ var amberDOM = (function (exports) {
   /**
    * Patch a DOM node with a vnode.
    * @param {Element|Text} element 
-   * @param {VNode} vnode 
+   * @param {Object} vnode a vnode object. 
    * @param {Boolean} same If 2 nodes are already checked by `isSameNode`, it should be set true.
    */
-  function patchElement(element, vnode, modules, same) {
-    if (vnode == null || typeof vnode === 'boolean') vnode = '';
+  function patchElement(element, vnode$$1, modules, same) {
+    if (vnode$$1 == null || typeof vnode$$1 === 'boolean') vnode$$1 = '';
 
     var i = void 0;
 
     // 1. both text nodes.
-    if (element.nodeType === 3 && typeof vnode === 'string') {
+    if (element.nodeType === 3 && typeof vnode$$1 === 'string') {
       var oldText = element.textContent || element.nodeValue;
-      if (oldText !== vnode) element.textContent = vnode;
+      if (oldText !== vnode$$1) element.textContent = vnode$$1;
     }
 
     // 2. are the same node.
-    else if (same || isSameNode(element, vnode)) {
-        patchAttrs(element, vnode, modules);
-        patchChildren(element, vnode, modules);
+    else if (same || isSameNode(element, vnode$$1)) {
+        patchAttrs(element, vnode$$1, modules);
+        patchChildren(element, vnode$$1, modules);
         for (var name in modules) {
-          (i = modules[name]) && (i = i.updating) && i(element, vnode.attrs[name]);
+          (i = modules[name]) && (i = i.updating) && i(element, vnode$$1.attrs[name]);
         }
       }
 
       // 3. not the same node.
       else {
-          var node = create(vnode, modules);
+          var node = create(vnode$$1, modules);
           // replace the `element` with `node`.
           element = remove(element.parentNode, element, node);
         }
@@ -483,19 +374,19 @@ var amberDOM = (function (exports) {
   /**
    * See if 2 nodes are the same.
    * @param {Element|Text} element 
-   * @param {VNode} vnode 
+   * @param {Object} vnode 
    */
-  function isSameNode(element, vnode) {
-    return element.__key__ === vnode.key && element.tagName === vnode.tagName;
+  function isSameNode(element, vnode$$1) {
+    return element.__key__ === vnode$$1.key && element.tagName === vnode$$1.tagName;
   }
 
   /**
    * Patch 2 same nodes.
    * @param {Element} element 
-   * @param {VNode} vnode 
+   * @param {Object} vnode 
    */
-  function patchAttrs(element, vnode, modules) {
-    var attrs = vnode.attrs,
+  function patchAttrs(element, vnode$$1, modules) {
+    var attrs = vnode$$1.attrs,
         oldAttrs = element.__attrs__;
 
     // Just ensure it is right if `element` was created by a vnode.
@@ -524,11 +415,11 @@ var amberDOM = (function (exports) {
   /**
    * Patch an element's children
    * @param {Element} element 
-   * @param {VNode} vnode 
+   * @param {Object} vnode 
    */
-  function patchChildren(element, vnode, modules) {
+  function patchChildren(element, vnode$$1, modules) {
     var oldChildren = element.childNodes,
-        vChildren = vnode.children,
+        vChildren = vnode$$1.children,
         oldLen = oldChildren.length,
         vLen = vChildren.length;
 
@@ -712,6 +603,113 @@ var amberDOM = (function (exports) {
     return keyedChildren;
   }
 
+  var classIdSpliter = /([\.#]?[^\s#.]+)/;
+  var stack = []; // internal stack for parsing children.
+
+  /**
+   * A selector might contain a tag name followed by some CSS selector.
+   * This function was stripped and modiffied from hyperscript's  parseClass.
+   * @see https://github.com/hyperhype/hyperscript/blob/master/index.js
+   * @param {String} selector 
+   */
+  function parseSelector(selector) {
+    var parts = selector.split(classIdSpliter);
+    var result = {};
+
+    parts.forEach(function (part) {
+      if (part === '') return;
+
+      if (!result.tagName) {
+        result.tagName = part;
+      } else if (part[0] === '.') {
+        (result.className || (result.className = [])).push(part.substr(1));
+      } else if (part[0] === '#') {
+        result.id = part.substr(1);
+      }
+    });
+
+    result.className && (result.className = result.className.join(' '));
+    return result;
+  }
+
+  /**
+   * Original propto: h(selector, props, ...children).
+   * 
+   * @param {String|Function} selector a built-in tag name or custom function that returns an object created by h.
+   * @param {Object} attrs optional. any style, event listeners, and className should be put here.
+   * @param {*} rest optional children. Can be nested.
+   */
+  function h(selector, attrs) {
+    // Case 1: `selector` is a function.
+    if (typeof selector === 'function') {
+      // use `new` in case it is a class.
+      return new (Function.prototype.bind.apply(selector, [null].concat(toConsumableArray(Array.prototype.slice.call(arguments, 1)))))();
+    }
+
+    var tagInfo = void 0,
+        children = [],
+        child = void 0,
+        lastPrimitive = false;
+
+    attrs || (attrs = {});
+
+    // collect children
+    for (var i = arguments.length; i-- > 2;) {
+      stack.push(arguments[i]);
+    }
+
+    // if attrs is any of these below, it must be a child.
+    if (isVnode(attrs) || typeof attrs === 'string' || typeof attrs === 'number' || typeof attrs === 'boolean' || attrs.pop != null) {
+      stack.push(attrs);
+      attrs = {};
+    }
+
+    // handle nested children if there's any.
+    var idxKey = 0;
+    while (stack.length) {
+      if ((child = stack.pop()) && child.pop !== void 0) {
+        for (var _i = child.length; _i--;) {
+          stack.push(child[_i]);
+        }
+      } else {
+        child = child == null ? '' : child;
+        child = typeof child === 'boolean' ? '' : child;
+        child = typeof child === 'number' ? String(child) : child;
+
+        if (lastPrimitive && typeof child === 'string') {
+          children[children.length - 1] += child;
+        } else {
+          if (isVnode(child) && child.attrs.key == null) {
+            child.key = child.attrs.key = idxKey++;
+          }
+          children.push(child);
+          lastPrimitive = typeof child === 'string' ? true : false;
+        }
+      }
+    }
+
+    // Case 2: `selector` is 'text'. 
+    if (selector === 'text') {
+      return children.length === 0 ? '' : children.join('');
+    }
+
+    // Case 3: `selector` is a selector.
+    else if (typeof selector === 'string') {
+        tagInfo = parseSelector(selector);
+        if (tagInfo.className) {
+          attrs._className = tagInfo.className;
+        }
+
+        if (tagInfo.id) {
+          attrs.id = attrs.id ? attrs.id : tagInfo.id;
+        }
+
+        return vnode(tagInfo.tagName, attrs, children);
+      } else {
+        throw new Error('Unrecognized selector: ' + selector + '.');
+      }
+  }
+
   var modules = {
     style: style,
     events: events,
@@ -720,18 +718,11 @@ var amberDOM = (function (exports) {
     }
   };
 
-  var amberDom = {
-    h: h,
-    init: init,
-    patchElem: patch,
-    createElem: create,
-    modules: modules
-
-    /**
-     * Initialize modules.
-     * @param {Array|Object|null} mods an array of modules.
-     */
-  };function init(mods) {
+  /**
+   * Initialize modules.
+   * @param {Array|Object|null} mods an array of modules.
+   */
+  function init(mods) {
     var modules = {};
 
     mods || (mods = []);
@@ -800,11 +791,8 @@ var amberDOM = (function (exports) {
   }
 
   exports.modules = modules;
-  exports.default = amberDom;
   exports.init = init;
   exports.h = h;
-  exports.style = style;
-  exports.events = events;
 
   return exports;
 

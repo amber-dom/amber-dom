@@ -158,12 +158,10 @@ var amberDOM = (function (exports) {
 
   /**
    * @param {String} tagName a tag name. Must be specified.
-   * @param {Object|null} attrs attributes to set on DOM.
-   * @param {Array|null} children can be an empty array.
+   * @param {Object} attrs attributes to set on DOM.
+   * @param {Array} children can be an empty array.
    */
   function vnode(tagName, attrs, children) {
-    attrs || (attrs = {});
-    children || (children = []);
 
     var i = void 0,
         ns = attrs.namespace || (svgRe.test(tagName) ? SVG_NS : void 0);

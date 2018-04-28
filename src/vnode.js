@@ -21,12 +21,10 @@ function addNS(vnode, ns) {
 
 /**
  * @param {String} tagName a tag name. Must be specified.
- * @param {Object|null} attrs attributes to set on DOM.
- * @param {Array|null} children can be an empty array.
+ * @param {Object} attrs attributes to set on DOM.
+ * @param {Array} children can be an empty array.
  */
 export function vnode(tagName, attrs, children) {
-  (attrs || (attrs = {}));
-  (children || (children = []));
 
   let i, ns = (attrs.namespace) || (svgRe.test(tagName) ? SVG_NS : void 0);
   let vnode = {

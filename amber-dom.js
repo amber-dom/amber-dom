@@ -155,6 +155,8 @@ function setAttribute(elem, name, value) {
       elem.className = value;
       break;
 
+    // NOTE: currently if 2 hooks, are different for an element,
+    // do not replace the old one, since it is a rare case you  would do so.
     case 'hooks':
     case 'namespace':
       break;
@@ -252,7 +254,7 @@ function patch(modules, domRoot, vRoot) {
     }
 
     for (var _name in modules) {
-      (i = modules[_name]) && (i = i.postpacth) && i(domRoot, vRoot);
+      (i = modules[_name]) && (i = i.postpatch) && i(domRoot, vRoot);
     }
   }
   return domRoot;
@@ -363,7 +365,7 @@ function patchChildren(modules, element, vnode$$1) {
         patchElement(modules, oldChildren[0], ch, true);
       } else {
         // Try to find a child node that match.
-        for (var i = 1; i < oldLen; i++) {
+        for (var i = 0; i < oldLen; i++) {
           if (isSameNode(oldChildren[i], ch)) {
             patchElement(modules, oldChildren[i], ch, true);
 
@@ -376,6 +378,7 @@ function patchChildren(modules, element, vnode$$1) {
         if (elemToMove === void 0) {
           elemToMove = create(modules, ch, mountedNodes);
         }
+        // FIXME: when "unmounting" hooks are used, it can be problematic.
         emptyChildren(modules, element);
         element.appendChild(elemToMove);
       }

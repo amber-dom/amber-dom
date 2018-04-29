@@ -1,14 +1,21 @@
 {
   "name": "amber-dom",
   "version": "0.0.8",
-  "description": "A lightweight virtual dom library.",
+  "description": "A modular virtual dom library.",
   "main": "commonjs/amber-dom.common.js",
-  "browser": "browser/amber-dom.browser.js",
   "module": "amber-dom.js",
   "scripts": {
     "build": "gulp default",
     "dev": "export NODE_ENV=development && karma start --browsers Chrome",
-    "test": "export NODE_ENV=production && karma start"
+    "test": "export NODE_ENV=production && karma start",
+    "prerelease": "npm run build",
+    "release": "npm run release-patch",
+    "prerelease-patch": "npm run build",
+    "prerelease-minor": "npm run build",
+    "prerelease-major": "npm run build",
+    "release-patch": "git checkout master && npm version patch && git push origin master --tags && npm publish",
+    "release-minor": "git checkout master && npm version minor && git push origin master --tags && npm publish",
+    "release-major": "git checkout master && npm version major && git push origin master --tags && npm publish"
   },
   "repository": {
     "type": "git",
@@ -16,14 +23,18 @@
   },
   "keywords": [
     "virtual-dom",
-    "jsx",
+    "vdom",
+    "vtree",
+    "patch",
+    "modular",
     "virtual-hyperscript",
     "hyperscript"
   ],
   "author": "aliwalker",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/aliwalker/amber-dom/issues"
+    "url": "https://github.com/aliwalker/amber-dom/issues",
+    "email": "alien-walker@outlook.com"
   },
   "homepage": "https://github.com/aliwalker/amber-dom#readme",
   "devDependencies": {

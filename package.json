@@ -1,6 +1,6 @@
 {
   "name": "amber-dom",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A modular virtual dom library.",
   "main": "commonjs/amber-dom.common.js",
   "module": "amber-dom.js",

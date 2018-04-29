@@ -1,5 +1,6 @@
 import './amber-dom.spec'
+import './module-hooks.spec'
+import './node-hooks.spec'
 import './events.spec'
 import './style.spec'
 import './dataset.spec'
-import './node-hooks.spec'

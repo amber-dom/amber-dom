@@ -112,6 +112,8 @@ export function setAttribute(elem, name, value) {
       elem.className = value;
       break;
 
+    // NOTE: currently if 2 hooks, are different for an element,
+    // do not replace the old one, since it is a rare case you  would do so.
     case 'hooks':
     case 'namespace':
       break;

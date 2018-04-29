@@ -28,7 +28,7 @@ function patch(modules, domRoot, vRoot) {
     }
 
     for (const name in modules) {
-      (i = modules[name]) && (i = i.postpacth) && i(domRoot, vRoot);
+      (i = modules[name]) && (i = i.postpatch) && i(domRoot, vRoot);
     }
   }
   return domRoot;

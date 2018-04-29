@@ -3,14 +3,26 @@ import { h, init } from '../src/amber-dom'
 
 let elem, vnode
 
-describe('hooks', () => {
+describe('node hooks', () => {
   const { createElement, patch } = init()
 
   describe('init', () => {
-    it('a vnode with `init`', () => {
+    it('invoked when a vnode is initialized', () => {
       let data = []
       vnode = h('div', {hooks: {init: () => {data.push(1)}}})
       expect(data).deep.equal([1])
+    })
+
+    it('invoked only on nodes that have "init" hook.', () => {
+      let tagNames = []
+      let init = (vnode) => {tagNames.push(vnode.tagName)}
+      let attrs = {hooks: {init}}
+      vnode = h('div', [
+        h('span', attrs),
+        h('i', [
+          h('p', attrs)])
+      ])
+      expect(tagNames).deep.equal(['SPAN', 'P'])
     })
   })
 
@@ -27,10 +39,24 @@ describe('hooks', () => {
       createElement(vnode)
       expect(beforeChildCreated).to.equal(true)
     })
+
+    it('invoked only on nodes with a "creating" hook.', () => {
+      let tagNames = []
+      let creating = (elem) => {tagNames.push(elem.tagName)}
+      vnode = h('div', {
+        hooks: {creating}
+      }, [
+        h('span', [ h('i', {hooks: {creating}}) ]),
+        h('a', {hooks: {creating}})
+      ])
+      expect(tagNames).deep.equal([])
+      createElement(vnode)
+      expect(tagNames).deep.equal(['DIV', 'I', 'A'])
+    })
   })
 
   describe('mounted', () => {
-    it('correct order(dfs and inorder)', () => {
+    it('invoked in DFS and inorder', () => {
       let tagNames = []
       let mounted = (elem) => {tagNames.push(elem.tagName)}
       let attrs = {hooks: {mounted}}
@@ -40,6 +66,18 @@ describe('hooks', () => {
       ])
       createElement(vnode)
       expect(tagNames).deep.equal(['DIV', 'SPAN', 'A', 'P', 'I'])
+    })
+
+    it('invoked only on nodes with "mounted" hooks', () => {
+      let tagNames = []
+      let mounted = (elem) => {tagNames.push(elem.tagName)}
+      let attrs = {hooks: {mounted}}
+      vnode = h('div', attrs, [
+        h('span', h('a', attrs, [ h('span', attrs) ])),
+        h('p', [ h('i', attrs) ])
+      ])
+      createElement(vnode)
+      expect(tagNames).deep.equal(['DIV', 'A', 'SPAN', 'I'])
     })
   })
 
@@ -92,6 +130,26 @@ describe('hooks', () => {
       expect(unmountedNodes.length).to.equal(2)
       expect(unmountedNodes).include('orange')
       expect(unmountedNodes).include('banana')
+    })
+
+    it('invoked only on nodes that are unmounting from their PARENT', () => {
+      let unmountedNodes = []
+      let unmounting = (elem) => {
+        unmountedNodes.push(elem.tagName)
+      }
+
+      vnode = h('div', [
+        h('span', {hooks: {unmounting}}, [
+          h('a', {hooks: {unmounting}}, [ h('span', {hooks: {unmounting}}) ]),
+        ])
+      ])
+      elem = createElement(vnode)
+      vnode = h('div', [
+        h('span', {hooks: {unmounting}})
+      ])
+      patch(elem, vnode)
+      expect(unmountedNodes.length).to.equal(1)
+      expect(unmountedNodes[0]).to.equal('A')
     })
   })
 })

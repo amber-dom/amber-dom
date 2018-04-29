@@ -146,7 +146,7 @@ function patchChildren(modules, element, vnode) {
 
     else {
       // Try to find a child node that match.
-      for (let i = 1; i < oldLen; i++) {
+      for (let i = 0; i < oldLen; i++) {
         if (isSameNode(oldChildren[i], ch)) {
           patchElement(modules, oldChildren[i], ch, true);
 
@@ -159,6 +159,7 @@ function patchChildren(modules, element, vnode) {
       if (elemToMove === void 0) {
         elemToMove = create(modules, ch, mountedNodes);
       }
+      // FIXME: when "unmounting" hooks are used, it can be problematic.
       emptyChildren(modules, element);
       element.appendChild(elemToMove);
     }

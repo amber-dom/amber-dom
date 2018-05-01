@@ -17,6 +17,8 @@ After reading through some related projects and some thinking, the underlying al
 
 * Instead of patching 2 vtrees, **patch directly against the DOM tree**. This change not only frees users from managing 2 in-memory vtrees, but also reduces memory usage. This is a significant improvement, because it means now you can patch any existing DOM tree with a vtree, even if the DOM tree wasn't created by `amber-dom/createElement`.
 
+* Modularized. It is now able to init `patch` & `createElement` with different modules.
+
 
 # v1.0.0
 

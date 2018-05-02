@@ -120,3 +120,51 @@ Lifecycle hooks are powerful because they let you take control of different phaz
 | updating | when updating the DOM element, before updating any of its children. | node, module| `updating(elem)` for node, `updating(elem, modAttrs)` for module |
 | unmounting | when unmounting the DOM element from its parent. | node, module | `unmounting(elem)` |
 | postpatch | after the whole patching ends | module | `postpatch(elem, vnode)` |
+
+Notice that `creating`, `updating` and `unmounting` are available for both single DOM nodes and modules. To use hooks on a single node, simply specify them inside the `hooks` inside `attrs`, when using `h` function to create a vnode:
+
+```js
+let vnode = h('div', {
+  hooks: {
+    init(vnode) { ... },
+    creating(elem) { ... },
+    mounted(elem) { ... },
+    ...
+  }
+})
+```
+
+#### `init(vnode)` hook
+
+The `init` hook lets you invoke some function right after a vnode is created(and all children of this vnode are created), and right before the real DOM node is created.
+
+#### `creating(elem)` and `creating(elem, modAttrs)` hook
+
+Invoked when an Element is being created. Available for both modules and single DOM nodes. When used on a single node, only the Element being created will be passed as argument to the hook, while both the Element being created and the corresponding attributes(see [module documentation](#module-documentation)) will be passed to the hook for modules. Also note that, when this hook is invoked, the `childNodes` for `elem` have not been created yet.
+
+#### `mounted(elem)` hook
+
+Invoked when an Element is created from a vnode, and mounted to the real DOM. Available for single DOM nodes only. This is because in some case you might want to get some computed DOM properties after they're created and mounted.
+
+#### `prepatch(elem, vnode)` hook
+
+Invoked before the whole patching process begins. Available for modules only.
+
+#### `updating(elem)` and `updating(elem, modAttrs)` hook
+
+Invoked when an Element is being updating during the patching process. Available for both modules and single DOM nodes. The arguments passed to the hook are the same as `creating` hook. Also note that when this hook is invoked, the `childNodes` of `elem` have not been created yet.
+
+
+#### `unmounting(elem)` hook
+
+Invoked when an Element is being unmounted from its parent. Available for both modules and single DOM nodes. The params are the same for both. Note that only when an Element is removed from its parent, will this hook be invoked. The elements removed indirectly will not be invoked on this hook.
+
+```js
+let elem = createElement(h('div', h('p', h('span'))))
+```
+The `unmounting` hook will be invoked on element p, but not on element `span`. (However you can traverse the unmounted tree inside the callback to `unmounting`.)
+
+#### `postpatch(elem, vnode)` hook
+
+Invoked after the whole patching process finishes. Available for modules only.
+

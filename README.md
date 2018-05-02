@@ -48,8 +48,6 @@ document.addEventListener('DOMContentLoaded', () => { // When DOM is loaded
 
 ## API documentation
 
-The API provided by Amber-dom is very simple. Let's walk start from the `h` function
-
 ### `h(selector, attrs, children)`
 
 The h function is provided to let you create a vnode easily. 
@@ -86,3 +84,39 @@ let { patch, createElement } = init([
 ])
 ```
 
+### `patch(elem, vnode)`
+
+The `patch` function returned by `init` function lets you diff and patch any existing DOM with a vtree efficiently. This frees you from manually keep the last generated vtree in memory, since Amber-dom stores information of the real DOM tree, but keeps it small.
+
+- **elem** can be any existing DOM nodes.
+- **vnode** is a virtual tree rooted at vnode.
+
+### `createElement(vnode)`
+
+Even if `patch` function can be used to patch any existing DOM trees, it would still be helpful to expose a function to build a DOM tree from a vtree. `createElement` lets you do that.
+
+```js
+let { createElement } = init()
+let vnode = h('div', [
+  h('h1', 'Hello from ', 'Amber-dom!'),
+  h('h2', 'Welcome!')
+])
+let elem = createElement(vnode) // => <div>
+                                //      <h1>Hello from Amber-dom!</h1>
+                                //      <h2>Welcom!</h2>
+                                //    </div>
+```
+
+### Hooks
+
+Lifecycle hooks are powerful because they let you take control of different phazes of Nodes. Modules also work by hooking into the lifecycles of nodes. All hooks are listed as below:
+
+| hook   | invoke time | available for | params |
+|--------|-------------|------------|---------|
+| init | when a vnode is created. | node | `init(vnode)` |
+| creating | when creating the DOM element, before creating any of its children. | node, module| `creating(elem)` for node, `creating(elem, modAttrs)` for module |
+| mounted | when the element is created and mounted to DOM. | node | `mounted(elem)` |
+| prepatch | before the whole patching begins. | module | `prepatch(elem, vnode)` |
+| updating | when updating the DOM element, before updating any of its children. | node, module| `updating(elem)` for node, `updating(elem, modAttrs)` for module |
+| unmounting | when unmounting the DOM element from its parent. | node, module | `unmounting(elem)` |
+| postpatch | after the whole patching ends | module | `postpatch(elem, vnode)` |

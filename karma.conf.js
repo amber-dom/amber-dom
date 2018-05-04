@@ -87,6 +87,7 @@ module.exports = function(config) {
       'ChromeHeadless',
       'ChromeHeadlessNoSandbox',
       'Firefox',
+      'FirefoxHeadless',
       'FirefoxDeveloper',
       'FirefoxAurora',
       'FirefoxNightly'],
@@ -95,6 +96,10 @@ module.exports = function(config) {
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
         flags: ['--disable-translate', '--disable-extensions', '--no-sandbox']
+      },
+      FirefoxHeadless: {
+        base: 'Firefox',
+        flags: [ '-headless' ],
       }
     },
 

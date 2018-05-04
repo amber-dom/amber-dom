@@ -7,7 +7,7 @@
   "scripts": {
     "build": "gulp default",
     "dev": "export NODE_ENV=development && karma start --browsers Chrome",
-    "test": "export NODE_ENV=production && karma start --browsers ChromeHeadless",
+    "test": "export NODE_ENV=production && karma start --browsers ChromeHeadlessNoSandbox",
     "prerelease": "npm run build",
     "release": "npm run release-patch",
     "prerelease-patch": "npm run build",

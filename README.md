@@ -1,6 +1,6 @@
 # <center style="color: #FF4500;">Amber-dom</center>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT) [![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
+[![Build Status](https://travis-ci.org/amber-dom/amber-dom.svg?branch=master)](https://travis-ci.org/amber-dom/amber-dom) [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT) [![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
 
 
 **Amber-dom** is yet another virtual dom library, which lets you create and update your DOM easily. It is modularized in architecture, making it easy to extend with modules. Built-in modules are shipped with to cover some of the basic use cases. All of them are optional.

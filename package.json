@@ -7,7 +7,7 @@
   "scripts": {
     "build": "gulp default",
     "dev": "export NODE_ENV=development && karma start --browsers Chrome",
-    "test": "export NODE_ENV=production && karma start",
+    "test": "export NODE_ENV=production && karma start --browsers ChromeHeadless,Firefox",
     "prerelease": "npm run build",
     "release": "npm run release-patch",
     "prerelease-patch": "npm run build",
@@ -19,13 +19,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aliwalker/amber-dom.git"
+    "url": "git+https://github.com/amber-dom/amber-dom.git"
   },
   "keywords": [
     "virtual-dom",
     "vdom",
     "vtree",
     "patch",
+    "diff",
     "modular",
     "virtual-hyperscript",
     "hyperscript"
@@ -36,7 +37,7 @@
     "url": "https://github.com/aliwalker/amber-dom/issues",
     "email": "alien-walker@outlook.com"
   },
-  "homepage": "https://github.com/aliwalker/amber-dom#readme",
+  "homepage": "https://github.com/aliwalker/amber-dom#README",
   "devDependencies": {
     "@metahub/karma-rollup-preprocessor": "^3.0.4",
     "babel-core": "^6.26.0",

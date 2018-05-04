@@ -8,6 +8,10 @@ const babel = require('rollup-plugin-babel');
 module.exports = function(config) {
   config.set({
 
+    client: {
+      captureConsole: false
+    },
+
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
     plugins: ['@metahub/karma-rollup-preprocessor', 'karma-*'],

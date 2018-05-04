@@ -1,5 +1,8 @@
 # <center style="color: #FF4500;">Amber-dom</center>
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT) [![npm version](https://badge.fury.io/js/amber-dom.svg)](https://badge.fury.io/js/amber-dom)
+
+
 **Amber-dom** is yet another virtual dom library, which lets you create and update your DOM easily. It is modularized in architecture, making it easy to extend with modules. Built-in modules are shipped with to cover some of the basic use cases. All of them are optional.
 
 ## Motivation
@@ -266,4 +269,40 @@ let vnode = h('div', {
 
 #### `modules/style` creator
 
-It lets you add inline style to an element easily.
+It lets you add inline style to an element easily. The `style` module attribute can be either a string or an object.
+
+```js
+import { init, h } from "amber-dom"
+import style from "amber-dom/modules/style"
+
+let { createElement, patch } = init([ style() ])
+
+let vnode = h('div', {
+  // An object
+  style: {
+    // Use camelCase
+    fontSize: '12px',
+    // Or use a string
+    'text-align': 'center'
+  }
+})
+
+let elem = createElement(vnode) // => <div style="font-size: 12px; text-align: center;"></div>
+```
+
+#### `modules/dataset` creator
+
+It allows you to set custom data attributes on elements easily.
+
+```js
+let { createElement, patch } = init([ dataset() ])
+
+let vnode = h('div', {
+  dataset: {
+    id: '123456',
+    dateOfBirth: '1960-09-08'
+  }
+})
+
+let elem = createElement(vnode) // => <div data-id="123456" data-dateOfBirth="1960-09-08"></div>
+```
